@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Technical Architecture Analysis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #0d0d18;
+            --bg-card: rgba(12, 12, 20, 0.9);
+            --accent-cyan: #00e5ff;
+            --accent-magenta: #ff00ff;
+            --accent-green: #00ff9d;
+            --accent-orange: #ff9100;
+            --accent-purple: #b388ff;
+            --accent-red: #ff5252;
+            --text-primary: #e8e8f0;
+            --text-secondary: #8888a0;
+            --text-muted: #555566;
+            --border: rgba(0, 229, 255, 0.15);
+            --glow-cyan: 0 0 30px rgba(0, 229, 255, 0.4);
+            --glow-magenta: 0 0 30px rgba(255, 0, 255, 0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        /* Background */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 229, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 255, 0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .bg-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(150px);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: -1;
+        }
+        .bg-glow-1 { top: -200px; left: -200px; background: var(--accent-cyan); }
+        .bg-glow-2 { bottom: -200px; right: -200px; background: var(--accent-magenta); }
+
+        /* Container */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 15, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 32px;
+        }
+        .nav-logo {
+            font-family: 'Syncopate', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            letter-spacing: 2px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+        .nav-links a {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: color 0.3s;
+        }
+        .nav-links a:hover { color: var(--accent-cyan); }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-top: 80px;
+        }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0, 229, 255, 0.1);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 100px;
+            font-size: 11px;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 32px;
+            width: fit-content;
+        }
+        .hero h1 {
+            font-family: 'Syncopate', sans-serif;
+            font-size: clamp(36px, 6vw, 72px);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 24px;
+            line-height: 1.2;
+        }
+        .hero-desc {
+            font-size: 18px;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin-bottom: 48px;
+        }
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+        .hero-meta-item {
+            padding: 16px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 13px;
+        }
+        .hero-meta-item strong { color: var(--accent-cyan); display: block; margin-bottom: 4px; }
+        .hero-meta-item span { color: var(--text-secondary); }
+
+        /* Section */
+        section { padding: 100px 0; }
+        .section-header {
+            margin-bottom: 60px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        .section-tag {
+            font-size: 11px;
+            color: var(--accent-magenta);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 12px;
+        }
+        .section-title {
+            font-family: 'Syncopate', sans-serif;
+            font-size: clamp(28px, 4vw, 42px);
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+        .section-desc {
+            font-size: 15px;
+            color: var(--text-secondary);
+            max-width: 600px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s ease;
+        }
+        .card:hover {
+            border-color: var(--accent-cyan);
+            box-shadow: var(--glow-cyan);
+            transform: translateY(-4px);
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .card-title .num {
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            padding: 4px 8px;
+            background: rgba(0, 229, 255, 0.1);
+            border-radius: 4px;
+        }
+        .card p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 16px;
+        }
+        .card:last-child { margin-bottom: 0; }
+
+        /* Code blocks */
+        pre {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 229, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 16px 0;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-green);
+        }
+        .keyword { color: var(--accent-magenta); }
+        .type { color: var(--accent-purple); }
+        .comment { color: var(--text-muted); font-style: italic; }
+        .string { color: var(--accent-green); }
+        .function { color: var(--accent-cyan); }
+
+        /* Flow diagrams */
+        .flow {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 24px 0;
+        }
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        .flow-step .arrow {
+            color: var(--accent-cyan);
+            font-size: 18px;
+        }
+        .flow-step .node {
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+        .flow-step .desc {
+            color: var(--text-secondary);
+            flex: 1;
+        }
+
+        /* Grid layouts */
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 24px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 24px; }
+
+        /* Tags */
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+        .tag {
+            padding: 4px 12px;
+            background: rgba(0, 229, 255, 0.1);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            border-radius: 100px;
+            font-size: 11px;
+            color: var(--accent-cyan);
+        }
+        .tag.magenta {
+            background: rgba(255, 0, 255, 0.1);
+            border-color: rgba(255, 0, 255, 0.3);
+            color: var(--accent-magenta);
+        }
+        .tag.green {
+            background: rgba(0, 255, 157, 0.1);
+            border-color: rgba(0, 255, 157, 0.3);
+            color: var(--accent-green);
+        }
+        .tag.orange {
+            background: rgba(255, 145, 0, 0.1);
+            border-color: rgba(255, 145, 0, 0.3);
+            color: var(--accent-orange);
+        }
+
+        /* Architecture diagram */
+        .arch-diagram {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            margin: 24px 0;
+            text-align: center;
+        }
+        .arch-layer {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .arch-box {
+            padding: 16px 24px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            min-width: 140px;
+            transition: all 0.3s;
+        }
+        .arch-box:hover {
+            border-color: var(--accent-cyan);
+            transform: scale(1.05);
+        }
+        .arch-box.cyan { border-color: rgba(0, 229, 255, 0.4); color: var(--accent-cyan); }
+        .arch-box.magenta { border-color: rgba(255, 0, 255, 0.4); color: var(--accent-magenta); }
+        .arch-box.green { border-color: rgba(0, 255, 157, 0.4); color: var(--accent-green); }
+        .arch-box.orange { border-color: rgba(255, 145, 0, 0.4); color: var(--accent-orange); }
+        .arch-box.purple { border-color: rgba(179, 136, 255, 0.4); color: var(--accent-purple); }
+
+        .arch-connector {
+            color: var(--text-muted);
+            font-size: 20px;
+            margin: 8px 0;
+        }
+
+        /* List */
+        .feature-list {
+            list-style: none;
+            margin: 16px 0;
+        }
+        .feature-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 14px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .feature-list li::before {
+            content: '›';
+            color: var(--accent-cyan);
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        .tab:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        .tab.active {
+            background: rgba(0, 229, 255, 0.1);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 60px 20px;
+            border-top: 1px solid var(--border);
+            margin-top: 80px;
+        }
+        footer p { font-size: 13px; color: var(--text-muted); }
+        footer a { color: var(--accent-cyan); text-decoration: none; }
+
+        /* Animations */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 0 20px; }
+            nav .container { padding: 16px 20px; }
+            .nav-links { display: none; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .hero-meta { flex-direction: column; }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--accent-cyan); border-radius: 4px; }
+        ::selection { background: rgba(0, 229, 255, 0.3); }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <nav>
+        <div class="container">
+            <div class="nav-logo">CLAUDE CODE</div>
+            <ul class="nav-links">
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#tool-system">Tool System</a></li>
+                <li><a href="#query-engine">Query Engine</a></li>
+                <li><a href="#data-flow">Data Flow</a></li>
+                <li><a href="#patterns">Patterns</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-badge">
+                <span>&#9670;</span> Technical Deep Dive
+            </div>
+            <h1>Claude Code<br>Architecture Analysis</h1>
+            <p class="hero-desc">
+                A comprehensive technical breakdown of Claude Code's architecture — from its message-driven tool system and streaming-first query engine to multi-agent coordination and context management.
+            </p>
+            <div class="hero-meta">
+                <div class="hero-meta-item">
+                    <strong>Type</strong>
+                    <span>TypeScript CLI Application</span>
+                </div>
+                <div class="hero-meta-item">
+                    <strong>UI Framework</strong>
+                    <span>React + Ink (Terminal)</span>
+                </div>
+                <div class="hero-meta-item">
+                    <strong>Pattern</strong>
+                    <span>Message-Driven / Event-Based</span>
+                </div>
+                <div class="hero-meta-item">
+                    <strong>Runtime</strong>
+                    <span>Bun</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Overview -->
+    <section id="overview">
+        <div class="container">
+            <div class="section-header fade-up">
+                <div class="section-tag">01 — Overview</div>
+                <h2 class="section-title">System Overview</h2>
+                <p class="section-desc">Claude Code is built around a message-driven, streaming-first architecture that enables real-time tool execution and sophisticated context management.</p>
+            </div>
+
+            <div class="arch-diagram fade-up">
+                <div class="arch-layer">
+                    <div class="arch-box cyan">User Input</div>
+                </div>
+                <div class="arch-connector">&#8595;</div>
+                <div class="arch-layer">
+                    <div class="arch-box magenta">REPL / Ink UI</div>
+                </div>
+                <div class="arch-connector">&#8595;</div>
+                <div class="arch-layer">
+                    <div class="arch-box green">QueryEngine</div>
+                    <div class="arch-box green">query() Loop</div>
+                    <div class="arch-box green">callModel()</div>
+                </div>
+                <div class="arch-connector">&#8595;</div>
+                <div class="arch-layer">
+                    <div class="arch-box orange">Tool System</div>
+                    <div class="arch-box orange">Command System</div>
+                    <div class="arch-box orange">Context Manager</div>
+                </div>
+                <div class="arch-connector">&#8595;</div>
+                <div class="arch-layer">
+                    <div class="arch-box purple">Anthropic API</div>
+                    <div class="arch-box purple">MCP Servers</div>
+                    <div class="arch-box purple">IDE Bridge</div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card fade-up">
+                    <div class="card-title">Core Philosophy</div>
+                    <p>Claude Code follows a <strong>streaming-first</strong> architecture where API responses, tool execution, and UI updates flow continuously rather than in batch operations.</p>
+                    <p>The system is designed around <strong>async generators</strong> enabling tools to execute as they stream in from the model, maximizing parallelism while maintaining safety guarantees.</p>
+                    <div class="tags">
+                        <span class="tag">Streaming</span>
+                        <span class="tag magenta">Async Generators</span>
+                        <span class="tag green">Real-time</span>
+                    </div>
+                </div>
+                <div class="card fade-up">
+                    <div class="card-title">Key Characteristics</div>
+                    <ul class="feature-list">
+                        <li>Schema-first tool validation with Zod</li>
+                        <li>Concurrency-aware tool execution</li>
+                        <li>Multi-stage context compression</li>
+                        <li>Hook-based extensibility</li>
+                        <li>Feature-flag driven DCE via Bun</li>
+                        <li>Dependency injection for testability</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture -->
+    <section id="architecture">
+        <div class="container">
+            <div class="section-header fade-up">
+                <div class="section-tag">02 — Architecture</div>
+                <h2 class="section-title">System Architecture</h2>
+                <p class="section-desc">The architecture consists of four interconnected layers: Input/Output, Query Processing, Tool Execution, and External Services.</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="card fade-up">
+                    <div class="card-title"><span class="num">1</span> Input / Output Layer</div>
+                    <p>Built with React + Ink for terminal UI rendering. Handles user input, message display, and real-time updates.</p>
+                    <pre><code><span class="keyword">const</span> { <span class="type">App</span> } = <span class="function">require</span>(<span class="string">'./components/App.tsx'</span>)
+<span class="keyword">const</span> { <span class="type">REPL</span> } = <span class="function">require</span>(<span class="string">'./screens/REPL.tsx'</span>)</code></pre>
+                    <p>Key components: <code>Messages.tsx</code>, <code>StatusLine.tsx</code>, <code>Markdown.tsx</code></p>
+                </div>
+                <div class="card fade-up">
+                    <div class="card-title"><span class="num">2</span> Query Processing Layer</div>
+                    <p>Owns the query lifecycle via <code>QueryEngine</code> and the <code>query()</code> async generator. Handles compaction, streaming, and state management.</p>
+                    <pre><code><span class="keyword">async</span> <span class="function">query</span>(messages, context) {
+  <span class="keyword">yield</span>* <span class="function">compact</span>(messages)
+  <span class="keyword">yield</span> <span class="keyword">await</span> <span class="function">callModel</span>(messages)
+  <span class="keyword">yield</span>* <span class="function">runTools</span>(streamingTools)
+}</code></pre>
+                </div>
+                <div class="card fade-up">
+                    <div class="card-title"><span class="num">3</span> Tool Execution Layer</div>
+                    <p>Self-contained tool modules with Zod schemas, permission models, and execution contexts. Tools can run concurrently if marked safe.</p>
+                    <pre><code><span class="keyword">type</span> <span class="type">Tool</span>&lt;<span class="type">Input</span>, <span class="type">Output</span>&gt; = {
+  <span class="function">name</span>: <span class="type">string</span>
+  <span class="function">inputSchema</span>: <span class="type">z.ZodType</span>&lt;<span class="type">Input</span>&gt;
+  <span class="function">execute</span>: (<span class="type">Input</span>, <span class="type">ToolUseContext</span>) => <span class="keyword">Promise</span>&lt;<span class="type">ToolResult</span>&gt;
+}</code></pre>
+                </div>
+                <div class="card fade-up">
+                    <div class="card-title"><span class="num">4</span> External Services Layer</div>
+                    <p>Integrates with Anthropic API, MCP servers, IDE bridges, and authentication providers (OAuth, API Key, AWS Bedrock, Azure Foundry).</p>
+                    <div class="tags">
+                        <span class="tag">Anthropic API</span>
+                        <span class="tag magenta">MCP SDK</span>
+                        <span class="tag green">OAuth 2.0</span>
+                        <span class="tag orange">AWS Bedrock</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tool System -->
+    <section id="tool-system">
+        <div class="container">
+            <div class="section-header fade-up">
+                <div class="section-tag">03 — Tool System</div>
+                <h2 class="section-title">Tool System Architecture</h2>
+                <p class="section-desc">The tool system is the core execution mechanism, providing schema-validated, concurrency-aware, and hookable operations.</p>
+            </div>
+
+            <div class="card fade-up">
+                <div class="card-title">Tool Interface</div>
+                <p>Every tool is a self-contained module with input validation, permission control, and custom rendering.</p>
+                <pre><code><span class="keyword">type</span> <span class="type">Tool</span>&lt;<span class="type">Input</span>, <span class="type">Output</span>&gt; = {
+  <span class="comment">// Identity</span>
+  <span class="function">name</span>: <span class="type">string</span>
+  <span class="function">description</span>: <span class="type">string</span>
+
+  <span class="comment">// Schema validation</span>
+  <span class="function">inputSchema</span>: <span class="type">z.ZodType</span>&lt;<span class="type">Input</span>&gt;
+
+  <span class="comment">// Lifecycle</span>
+  <span class="function">isEnabled</span>: () => <span class="type">boolean</span>
+  <span class="function">isConcurrencySafe</span>?: (<span class="type">Input</span>) => <span class="type">boolean</span>
+  <span class="function">execute</span>: (<span class="type">Input</span>, <span class="type">ToolUseContext</span>) => <span class="keyword">Promise</span>&lt;<span class="type">ToolResult</span>&gt;
+
+  <span class="comment">// Optional rendering</span>
+  <span class="function">render</span>?: (<span class="type">Output</span>, <span class="type">Input</span>) => <span class="type">React.ReactNode</span>
+}</code></pre>
+            </div>
+
+            <div class="grid-2">
+                <div class="card fade-up">
+                    <div class="card-title">Core Tools (45+)</div>
+                    <ul class="feature-list">
+                        <li><strong>AgentTool</strong> — Spawns sub-agents</li>
+                        <li><strong>BashTool</strong> — Shell command execution</li>
+                        <li><strong>FileReadTool</strong> — File system reads</li>
+                        <li><strong>FileEditTool</strong> — Code modifications</li>
+                        <li><strong>FileWriteTool</strong> — File creation</li>
+                        <li><strong>GlobTool</strong> — Pattern matching</li>
+                        <li><strong>GrepTool</strong> — Code search</li>
+                        <li><strong>WebFetchTool</strong> — HTTP requests</li>
+                        <li><strong>TaskCreateTool</strong> — Task management</li>
+                    </ul>
+                </div>
+                <div class="card fade-up">
+                    <div class="card-title">Tool Categories</div>
+                    <ul class="feature-list">
+                        <li><strong>Core Tools</strong> — Always available</li>
+                        <li><strong>Conditional Tools</strong> — Behind feature flags</li>
+                        <li><strong>MCP Tools</strong> — From protocol servers</li>
+                        <li><strong>Plugin Tools</strong> — From extensions</li>
+                    </ul>
+                    <p style="margin-top: 16px;">Tools are sorted for "prompt cache stability" — consistent ordering for optimal token usage.</p>
+                </div>
+            </div>
+
+            <div class="card fade-up">
+                <div class="card-title">Concurrency Control</div>
+                <p>The <code>StreamingToolExecutor</code> partitions tools by concurrency safety:</p>
+                <pre><code><span class="comment">// Concurrency-safe tools (read-only) run in parallel</span>
+<span class="keyword">const</span> <span class="type">MAX_CONCURRENCY</span> = <span class="number">10</span>
+
+<span class="comment">// Non-concurrent tools (writes) run serially</span>
+<span class="comment">// with exclusive access to prevent conflicts</span>
+
+<span class="comment">// Results are emitted in original order</span>
+results.<span class="function">bufferAndEmitInOrder</span>()</code></pre>
+                <div class="tags">
+                    <span class="tag">Parallel Reads</span>
+                    <span class="tag magenta">Serial Writes</span>
+                    <span class="tag green">Ordered Output</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Query Engine -->
+    <section id="query-engine">
+        <div class="container">
+            <div class="section-header fade-up">
+                <div class="section-tag">04 — Query Engine</div>
+                <h2 class="section-title">Query Engine & Processing</h2>
+                <p class="section-desc">The query engine uses an async generator pattern for streaming-first processing with multi-stage compaction.</p>
+            </div>
+
+            <div class="card fade-up">
+                <div class="card-title">Query Loop Architecture</div>
+                <p>The <code>query()</code> function is an async generator that yields messages, stream events, and tombstones as processing happens.</p>
+
+                <div class="flow">
+                    <div class="flow-step">
+                        <span class="node">submitMessage()</span>
+                        <span class="desc">User input enters QueryEngine</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="arrow">&#8595;</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="node">processUserInput()</span>
+                        <span class="desc">Parse slash commands, model selection</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="arrow">&#8595;</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="node">query() [async generator]</span>
+                        <span class="desc">Main processing loop</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="arrow">&#8595;</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="node">callModel()</span>
+                        <span class="desc">Streaming API call</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="arrow">&#8595;</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="node">StreamingToolExecutor</span>
+                        <span class="desc">Execute tools as they stream</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="arrow">&#8595;</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="node">handleStopHooks()</span>
+                        <span class="desc">Post-execution hooks</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card fade-up">
+                    <div class="card-title">State Management</div>
+                    <p>State is carried between iterations for context continuity:</p>
+                    <pre><code><span class="keyword">type</span> <span class="type">State</span> = {
+  <span class="function">messages</span>: <span class="type">Message</span>[]
+  <span class="function">toolUseContext</span>: <span class="type">ToolUseContext</span>
+  <span class="function">autoCompactTracking</span>: <span class="type">AutoCompactTrackingState</span>
+  <span class="function">hasAttemptedReactiveCompact</span>: <span class="type">boolean</span>
+  <span class="function">pendingToolUseSummary</span>: <span class="type">Promise</span>&lt;<span class="type">ToolUseSummaryMessage</span>&gt;
+  <span class="function">stopHookActive</span>: <span class="type">boolean</span>
+  <span class="function">turnCount</span>: <span class="type">number</span>
+}</code></pre>
+                </div>
+                <div class="card fade-up">
+                    <div class="card-title">API Error Recovery</div>
+                    <p>Multi-layer error recovery with circuit breakers:</p>
+                    <ul class="feature-list">
+                        <li><strong>Fallback Models</strong> — Retry with backup model</li>
+                        <li><strong>Streaming Fallback</strong> — Non-streaming retry</li>
+                        <li><strong>Token Budget</strong> — Track across compactions</li>
+                        <li><strong>Circuit Breaker</strong> — Stop after 3 consecutive failures</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card fade-up">
+                <div class="card-title">Dependency Injection</div>
+                <p>Query dependencies are injected for testability:</p>
+                <pre><code><span class="keyword">export type</span> <span class="type">QueryDeps</span> = {
+  <span class="function">callModel</span>: <span class="keyword">typeof</span> queryModelWithStreaming
+  <span class="function">microcompact</span>: <span class="keyword">typeof</span> microcompactMessages
+  <span class="function">autocompact</span>: <span class="keyword">typeof</span> autoCompactIfNeeded
+  <span class="function">uuid</span>: () => <span class="type">string</span>
+}
+
+<span class="keyword">export function</span> <span class="function">productionDeps</span>(): <span class="type">QueryDeps</span> {
+  <span class="keyword">return</span> {
+    callModel: queryModelWithStreaming,
+    microcompact: microcompactMessages,
+    autocompact: autoCompactIfNeeded,
+    uuid: randomUUID,
+  }
+}</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Data Flow -->
+    <section id="data-flow">
+        <div class="container">
+            <div class="section-header fade-up">
+                <div class="section-tag">05 — Data Flow</div>
+                <h2 class="section-title">Message & Tool Flow</h2>
+                <p class="section-desc">How data moves through the system from user input to tool execution and back.</p>
+            </div>
+
+            <div class="card fade-up">
+                <div class="card-title">User Message Flow</div>
+                <div class="flow">
+                    <div class="flow-step">
+                        <span class="node">User Input</span>
+                        <span class="desc">Command or message in REPL</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="arrow">&#8595;</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="node">processUserInput()</span>
+                        <span class="desc">Parse commands, extract attachments</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="arrow">&#8595;</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="node">Compaction Pipeline</span>
+                        <span class="desc">Snip → Microcompact → Autocompact → Context Collapse</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="arrow">&#8595;</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="node">callModel()</span>
+                        <span class="desc">Streaming API request</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="arrow">&#8595;</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="node">Tool Streaming</span>
+                        <span class="desc">Execute tools as they arrive</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="arrow">&#8595;</span>
+                    </div>
+                    <div class="flow-step">
+                        <span class="node">Response</span>
+                        <span class="desc">Display to user</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card fade-up">
+                <div class="card-title">Tool Invocation Flow</div>
+                <pre><code><span class="comment">// 1. ToolUseBlock arrives from model</span>
+ToolUseBlock { name: <span class="string">"Bash"</span>, input: { command: <span class="string">"ls"</span> } }
+
+<span class="comment">// 2. Permission check</span>
+<span class="keyword">await</span> <span class="function">canUseTool</span>(tool, permissionContext)
+
+<span class="comment">// 3. Execute with hooks</span>
+<span class="keyword">await</span> <span class="function">executePreToolHooks</span>(tool)
+result = <span class="keyword">await</span> tool.<span class="function">execute</span>(input, context)
+<span class="keyword">await</span> <span class="function">executePostToolHooks</span>(tool, result)
+
+<span class="comment">// 4. Return to model for potential follow-up</span>
+<span class="keyword">return</span> { result, content: <span class="string">"..."</span> }</code></pre>
+            </div>
+
+            <div class="grid-2">
+                <div class="card fade-up">
+                    <div class="card-title">Context Management</div>
+                    <p>Multiple compaction strategies maintain context within token limits:</p>
+                    <ul class="feature-list">
+                        <li><strong>Snip</strong> — Remove intermediate turns, preserve boundaries</li>
+                        <li><strong>Microcompact</strong> — Cache tool results by tool_use_id</li>
+                        <li><strong>Autocompact</strong> — Summarize when approaching limit</li>
+                        <li><strong>Context Collapse</strong> — Hierarchical summarization</li>
+                    </ul>
+                </div>
+                <div class="card fade-up">
+                    <div class="card-title">Hook System</div>
+                    <p>Extensible hooks at key points:</p>
+                    <ul class="feature-list">
+                        <li><strong>Pre-tool hooks</strong> — Before tool execution</li>
+                        <li><strong>Post-tool hooks</strong> — After tool execution</li>
+                        <li><strong>Permission hooks</strong> — Control tool access</li>
+                        <li><strong>Sampling hooks</strong> — After API response</li>
+                        <li><strong>Stop hooks</strong> — End of turn</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Patterns -->
+    <section id="patterns">
+        <div class="container">
+            <div class="section-header fade-up">
+                <div class="section-tag">06 — Design Patterns</div>
+                <h2 class="section-title">Key Design Patterns</h2>
+                <p class="section-desc">The architectural patterns that make Claude Code robust and maintainable.</p>
+            </div>
+
+            <div class="grid-3">
+                <div class="card fade-up">
+                    <div class="card-title">Dead Code Elimination</div>
+                    <p>Feature flags via Bun's bundle system enable conditional compilation.</p>
+                    <pre><code><span class="keyword">const</span> voiceModule = <span class="function">feature</span>(<span class="string">'VOICE_MODE'</span>)
+  ? <span class="function">require</span>(<span class="string">'./voice/index.js'</span>)
+  : <span class="keyword">null</span></code></pre>
+                    <div class="tags">
+                        <span class="tag">bun:bundle</span>
+                        <span class="tag magenta">Tree Shaking</span>
+                    </div>
+                </div>
+                <div class="card fade-up">
+                    <div class="card-title">Observable Store</div>
+                    <p>Simple state management with immutable updates and subscriptions.</p>
+                    <pre><code><span class="keyword">type</span> <span class="type">Store</span>&lt;<span class="type">T</span>&gt; = {
+  <span class="function">getState</span>: () => <span class="type">T</span>
+  <span class="function">setState</span>: (<span class="type">T</span> => <span class="type">T</span>) => <span class="keyword">void</span>
+  <span class="function">subscribe</span>: (<span class="type">Listener</span>) => () => <span class="type">Unsubscribe</span>
+}</code></pre>
+                </div>
+                <div class="card fade-up">
+                    <div class="card-title">Memoization</div>
+                    <p>Expensive operations cached by session or cwd:</p>
+                    <pre><code><span class="comment">// Cached by working directory</span>
+<span class="keyword">const</span> commands = <span class="function">memoize</span>(
+  () => <span class="function">loadCommands</span>(),
+  { <span class="function">key</span>: process.<span class="function">cwd</span>() }
+)</code></pre>
+                </div>
+                <div class="card fade-up">
+                    <div class="card-title">Parallel Prefetch</div>
+                    <p>Startup optimization by prefetching non-critical data in parallel.</p>
+                    <pre><code><span class="keyword">await</span> <span class="type">Promise</span>.<span class="function">all</span>([
+  <span class="function">prefetchMDMSettings</span>(),
+  <span class="function">prefetchKeychain</span>(),
+  <span class="function">prefetchAPI</span>(),
+])</code></pre>
+                </div>
+                <div class="card fade-up">
+                    <div class="card-title">Multi-Agent Coordination</div>
+                    <p>Coordinator pattern for orchestrating multiple workers.</p>
+                    <pre><code><span class="comment">// Workers report via XML notifications</span>
+&lt;task-notification&gt;
+  &lt;task-id&gt;{agentId}&lt;/task-id&gt;
+  &lt;status&gt;completed&lt;/status&gt;
+  &lt;result&gt;{response}&lt;/result&gt;
+&lt;/task-notification&gt;</code></pre>
+                </div>
+                <div class="card fade-up">
+                    <div class="card-title">Lazy Loading</div>
+                    <p>Heavy modules loaded on-demand to reduce initial bundle.</p>
+                    <pre><code><span class="comment">// Dynamic import for heavy modules</span>
+<span class="keyword">const</span> { <span class="type">OpenTelemetry</span> } = <span class="keyword">await</span> <span class="function">import</span>(
+  <span class="string">'./services/telemetry.js'</span>
+)</code></pre>
+                </div>
+            </div>
+
+            <div class="card fade-up">
+                <div class="card-title">Authentication Flow</div>
+                <p>Claude Code supports multiple authentication methods:</p>
+                <div class="arch-layer" style="margin-top: 20px;">
+                    <div class="arch-box cyan">API Key</div>
+                    <div class="arch-box magenta">OAuth 2.0</div>
+                    <div class="arch-box green">AWS Bedrock</div>
+                    <div class="arch-box orange">Google Vertex</div>
+                    <div class="arch-box purple">Azure Foundry</div>
+                </div>
+                <pre style="margin-top: 20px;"><code><span class="comment">// Client selection based on environment</span>
+<span class="keyword">if</span> (<span class="function">isEnvTruthy</span>(<span class="string">'CLAUDE_CODE_USE_BEDROCK'</span>)) {
+  <span class="keyword">return new</span> <span class="type">AnthropicBedrock</span>({ awsRegion, ... })
+}
+<span class="keyword">if</span> (<span class="function">isEnvTruthy</span>(<span class="string">'CLAUDE_CODE_USE_FOUNDRY'</span>)) {
+  <span class="keyword">return new</span> <span class="type">AnthropicFoundry</span>({ azureADTokenProvider, ... })
+}
+<span class="keyword">return new</span> <span class="type">Anthropic</span>({ apiKey, ... })</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Summary -->
+    <section>
+        <div class="container">
+            <div class="section-header fade-up">
+                <div class="section-tag">Summary</div>
+                <h2 class="section-title">Key Takeaways</h2>
+            </div>
+
+            <div class="grid-2">
+                <div class="card fade-up">
+                    <div class="card-title">Architecture Strengths</div>
+                    <ul class="feature-list">
+                        <li><strong>Streaming-first</strong> — Real-time tool execution</li>
+                        <li><strong>Schema validation</strong> — Type-safe tool contracts</li>
+                        <li><strong>Concurrency control</strong> — Safe parallelism</li>
+                        <li><strong>Multi-stage compaction</strong> — Context management</li>
+                        <li><strong>Hook extensibility</strong> — Customizable lifecycle</li>
+                        <li><strong>Feature flags</strong> — Optimized bundle size</li>
+                    </ul>
+                </div>
+                <div class="card fade-up">
+                    <div class="card-title">Technical Decisions</div>
+                    <ul class="feature-list">
+                        <li><strong>Async generators</strong> — Streaming throughout</li>
+                        <li><strong>Dependency injection</strong> — Testability</li>
+                        <li><strong>Observable stores</strong> — Simple state</li>
+                        <li><strong>Memoization</strong> — Performance optimization</li>
+                        <li><strong>Lazy loading</strong> — Fast startup</li>
+                        <li><strong>Multi-provider auth</strong> — Flexibility</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>Claude Code Technical Analysis Report &middot; <a href="https://github.com/Million-mo/claude-code-analysis">GitHub Repository</a></p>
+        </div>
+    </footer>
+
+    <script>
+        // Intersection Observer for animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+        // Smooth scroll for nav links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
