@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Source Analysis Report</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #0d0d15;
+            --bg-tertiary: #12121a;
+            --bg-card: rgba(15, 15, 25, 0.8);
+            --accent-cyan: #00fff2;
+            --accent-magenta: #ff00ff;
+            --accent-green: #00ff88;
+            --accent-yellow: #ffff00;
+            --accent-orange: #ff8800;
+            --accent-red: #ff0044;
+            --accent-purple: #8800ff;
+            --text-primary: #e0e0e0;
+            --text-secondary: #8888aa;
+            --text-muted: #555566;
+            --border-color: rgba(0, 255, 242, 0.2);
+            --glow-cyan: 0 0 20px rgba(0, 255, 242, 0.5), 0 0 40px rgba(0, 255, 242, 0.3);
+            --glow-magenta: 0 0 20px rgba(255, 0, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3);
+            --glow-green: 0 0 20px rgba(0, 255, 136, 0.5), 0 0 40px rgba(0, 255, 136, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Animated Grid Background */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-image:
+                linear-gradient(rgba(0, 255, 242, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 242, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        /* Scanlines Effect */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.1) 0px,
+                rgba(0, 0, 0, 0.1) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            opacity: 0.3;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            padding: 80px 20px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            background: rgba(0, 255, 242, 0.1);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 100px;
+            font-size: 12px;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 40px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: var(--glow-cyan); }
+            50% { box-shadow: 0 0 30px rgba(0, 255, 242, 0.8), 0 0 60px rgba(0, 255, 242, 0.5); }
+        }
+
+        .hero-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(48px, 10vw, 120px);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            filter: drop-shadow(0 0 30px rgba(0, 255, 242, 0.5));
+            margin-bottom: 20px;
+            animation: titleGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes titleGlow {
+            0% { filter: drop-shadow(0 0 30px rgba(0, 255, 242, 0.5)); }
+            100% { filter: drop-shadow(0 0 50px rgba(255, 0, 255, 0.5)); }
+        }
+
+        .hero-subtitle {
+            font-size: 24px;
+            color: var(--text-secondary);
+            margin-bottom: 60px;
+            max-width: 800px;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 80px;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 40px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .meta-item:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-cyan);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .meta-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            text-shadow: var(--glow-cyan);
+        }
+
+        .meta-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 8px;
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+        }
+
+        .scroll-indicator span {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .scroll-indicator svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--accent-cyan);
+        }
+
+        /* Section Styles */
+        .section {
+            padding: 120px 0;
+            position: relative;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .section-tag {
+            display: inline-block;
+            padding: 6px 16px;
+            background: rgba(255, 0, 255, 0.1);
+            border: 1px solid var(--accent-magenta);
+            border-radius: 100px;
+            font-size: 11px;
+            color: var(--accent-magenta);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .section-desc {
+            font-size: 16px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Tech Stack Grid */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .tech-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tech-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta));
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .tech-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .tech-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .tech-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .tech-icon.cyan { background: rgba(0, 255, 242, 0.15); color: var(--accent-cyan); }
+        .tech-icon.magenta { background: rgba(255, 0, 255, 0.15); color: var(--accent-magenta); }
+        .tech-icon.green { background: rgba(0, 255, 136, 0.15); color: var(--accent-green); }
+        .tech-icon.yellow { background: rgba(255, 255, 0, 0.15); color: var(--accent-yellow); }
+        .tech-icon.orange { background: rgba(255, 136, 0, 0.15); color: var(--accent-orange); }
+        .tech-icon.purple { background: rgba(136, 0, 255, 0.15); color: var(--accent-purple); }
+
+        .tech-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .tech-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Architecture Section */
+        .arch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 32px;
+        }
+
+        .arch-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .arch-number {
+            position: absolute;
+            top: -20px;
+            left: 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 80px;
+            font-weight: 900;
+            color: rgba(0, 255, 242, 0.1);
+            line-height: 1;
+        }
+
+        .arch-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .arch-title svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .arch-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .arch-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .arch-tag {
+            padding: 4px 12px;
+            background: rgba(0, 255, 242, 0.1);
+            border: 1px solid rgba(0, 255, 242, 0.3);
+            border-radius: 100px;
+            font-size: 11px;
+            color: var(--accent-cyan);
+        }
+
+        /* Feature Flags Matrix */
+        .flags-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            overflow-x: auto;
+        }
+
+        .flags-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            min-width: 800px;
+        }
+
+        .flag-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--bg-tertiary);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .flag-item:hover {
+            border-color: var(--accent-green);
+            box-shadow: var(--glow-green);
+        }
+
+        .flag-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            box-shadow: var(--glow-green);
+            animation: statusPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .flag-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .flag-desc {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* Stats Counter Section */
+        .stats-section {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stats-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 50%, rgba(0, 255, 242, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 50%, rgba(255, 0, 255, 0.1) 0%, transparent 50%);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .stat-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .stat-icon.cyan { background: rgba(0, 255, 242, 0.15); }
+        .stat-icon.magenta { background: rgba(255, 0, 255, 0.15); }
+        .stat-icon.green { background: rgba(0, 255, 136, 0.15); }
+        .stat-icon.yellow { background: rgba(255, 255, 0, 0.15); }
+        .stat-icon.orange { background: rgba(255, 136, 0, 0.15); }
+        .stat-icon.purple { background: rgba(136, 0, 255, 0.15); }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 56px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Module Size Chart */
+        .chart-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+        }
+
+        .chart-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 40px;
+        }
+
+        .bar-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .bar-item {
+            display: grid;
+            grid-template-columns: 150px 1fr 80px;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .bar-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .bar-track {
+            height: 32px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 8px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding-left: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--bg-primary);
+            transition: width 1s ease-out;
+        }
+
+        .bar-fill.cyan { background: linear-gradient(90deg, var(--accent-cyan), rgba(0, 255, 242, 0.7)); }
+        .bar-fill.magenta { background: linear-gradient(90deg, var(--accent-magenta), rgba(255, 0, 255, 0.7)); }
+        .bar-fill.green { background: linear-gradient(90deg, var(--accent-green), rgba(0, 255, 136, 0.7)); }
+        .bar-fill.yellow { background: linear-gradient(90deg, var(--accent-yellow), rgba(255, 255, 0, 0.7)); }
+        .bar-fill.orange { background: linear-gradient(90deg, var(--accent-orange), rgba(255, 136, 0, 0.7)); }
+        .bar-fill.purple { background: linear-gradient(90deg, var(--accent-purple), rgba(136, 0, 255, 0.7)); }
+
+        .bar-size {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: right;
+        }
+
+        /* Directory Structure */
+        .dir-tree {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tree-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .tree-node {
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .tree-node:hover {
+            border-color: var(--accent-cyan);
+            transform: translateX(8px);
+        }
+
+        .tree-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .tree-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .tree-icon.commands { background: rgba(0, 255, 242, 0.15); color: var(--accent-cyan); }
+        .tree-icon.tools { background: rgba(255, 0, 255, 0.15); color: var(--accent-magenta); }
+        .tree-icon.components { background: rgba(0, 255, 136, 0.15); color: var(--accent-green); }
+        .tree-icon.hooks { background: rgba(255, 255, 0, 0.15); color: var(--accent-yellow); }
+        .tree-icon.services { background: rgba(255, 136, 0, 0.15); color: var(--accent-orange); }
+        .tree-icon.bridge { background: rgba(136, 0, 255, 0.15); color: var(--accent-purple); }
+
+        .tree-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .tree-count {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--accent-cyan);
+            margin-bottom: 8px;
+        }
+
+        .tree-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .tree-path {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            padding: 4px 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        /* Key Files Explorer */
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+        }
+
+        .file-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 28px;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 242, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .file-card:hover::after {
+            left: 100%;
+        }
+
+        .file-card:hover {
+            border-color: var(--accent-magenta);
+            box-shadow: var(--glow-magenta);
+            transform: translateY(-5px);
+        }
+
+        .file-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .file-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-ext {
+            padding: 2px 8px;
+            background: rgba(0, 255, 242, 0.15);
+            border-radius: 4px;
+            font-size: 10px;
+            color: var(--accent-cyan);
+        }
+
+        .file-size {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-magenta);
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .file-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+
+        .file-path {
+            font-size: 10px;
+            color: var(--text-muted);
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            display: inline-block;
+            word-break: break-all;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 80px 20px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 80px;
+        }
+
+        .footer-text {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .footer-text span {
+            color: var(--accent-cyan);
+        }
+
+        /* Animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 20px;
+            }
+
+            .hero-meta {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .meta-item {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .meta-value {
+                font-size: 36px;
+            }
+
+            .bar-item {
+                grid-template-columns: 100px 1fr 60px;
+            }
+
+            .bar-label {
+                font-size: 11px;
+            }
+
+            .stat-value {
+                font-size: 40px;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-cyan);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-magenta);
+        }
+
+        /* Selection */
+        ::selection {
+            background: rgba(0, 255, 242, 0.3);
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <div class="scanlines"></div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 6v6l4 2"/>
+            </svg>
+            Source Code Analysis Report
+        </div>
+        <h1 class="hero-title">CLAUDE CODE</h1>
+        <p class="hero-subtitle">Comprehensive Technical Analysis of Anthropic's CLI for Software Engineering</p>
+
+        <div class="hero-meta">
+            <div class="meta-item">
+                <span class="meta-value" data-count="1900">0</span>
+                <span class="meta-label">Source Files</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-value" data-count="512000" data-suffix="+">0</span>
+                <span class="meta-label">Lines of Code</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-value" data-count="55">0</span>
+                <span class="meta-label">Top Modules</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-value" data-count="2026">0</span>
+                <span class="meta-label">Analysis Year</span>
+            </div>
+        </div>
+
+        <div class="scroll-indicator">
+            <span>Scroll to Explore</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M19 12l-7 7-7-7"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- Technology Stack -->
+    <section class="section" id="tech-stack">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-tag">Technology Stack</span>
+                <h2 class="section-title">Core Technologies</h2>
+                <p class="section-desc">The powerful technologies that power Claude Code's capabilities</p>
+            </div>
+
+            <div class="tech-grid">
+                <div class="tech-card fade-in">
+                    <div class="tech-icon cyan">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <div class="tech-name">TypeScript</div>
+                    <div class="tech-desc">Primary language with strict mode for type safety and enhanced developer experience</div>
+                </div>
+
+                <div class="tech-card fade-in">
+                    <div class="tech-icon green">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="12" cy="12" r="10"/>
+                        </svg>
+                    </div>
+                    <div class="tech-name">Bun Runtime</div>
+                    <div class="tech-desc">High-performance JavaScript runtime and package manager for optimal startup</div>
+                </div>
+
+                <div class="tech-card fade-in">
+                    <div class="tech-icon magenta">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        </svg>
+                    </div>
+                    <div class="tech-name">React + Ink</div>
+                    <div class="tech-desc">Terminal UI framework combining React's component model with Ink's rendering</div>
+                </div>
+
+                <div class="tech-card fade-in">
+                    <div class="tech-icon yellow">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                        </svg>
+                    </div>
+                    <div class="tech-name">Commander.js</div>
+                    <div class="tech-desc">CLI argument parsing with extra type support for robust command handling</div>
+                </div>
+
+                <div class="tech-card fade-in">
+                    <div class="tech-icon orange">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                    </div>
+                    <div class="tech-name">Zod v4</div>
+                    <div class="tech-desc">Schema validation for type-safe input validation across all tools</div>
+                </div>
+
+                <div class="tech-card fade-in">
+                    <div class="tech-icon purple">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        </svg>
+                    </div>
+                    <div class="tech-name">MCP SDK + LSP</div>
+                    <div class="tech-desc">Model Context Protocol and Language Server Protocol for extensibility</div>
+                </div>
+
+                <div class="tech-card fade-in">
+                    <div class="tech-icon cyan">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <div class="tech-name">Anthropic SDK</div>
+                    <div class="tech-desc">Official API client for communicating with Claude models</div>
+                </div>
+
+                <div class="tech-card fade-in">
+                    <div class="tech-icon magenta">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                        </svg>
+                    </div>
+                    <div class="tech-name">OpenTelemetry</div>
+                    <div class="tech-desc">Distributed tracing and metrics with gRPC transport</div>
+                </div>
+
+                <div class="tech-card fade-in">
+                    <div class="tech-icon green">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/>
+                        </svg>
+                    </div>
+                    <div class="tech-name">OAuth 2.0 + JWT</div>
+                    <div class="tech-desc">Secure authentication with macOS Keychain integration</div>
+                </div>
+
+                <div class="tech-card fade-in">
+                    <div class="tech-icon yellow">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                        </svg>
+                    </div>
+                    <div class="tech-name">GrowthBook</div>
+                    <div class="tech-desc">Feature flag system for progressive feature rollout</div>
+                </div>
+
+                <div class="tech-card fade-in">
+                    <div class="tech-icon orange">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                    </div>
+                    <div class="tech-name">ripgrep</div>
+                    <div class="tech-desc">Ultra-fast code search for efficient codebase navigation</div>
+                </div>
+
+                <div class="tech-card fade-in">
+                    <div class="tech-icon purple">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                        </svg>
+                    </div>
+                    <div class="tech-name">Context Compression</div>
+                    <div class="tech-desc">Advanced memory management with reactive compact mode</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture Patterns -->
+    <section class="section" id="architecture">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-tag">Architecture</span>
+                <h2 class="section-title">Design Patterns</h2>
+                <p class="section-desc">Core architectural patterns that enable Claude Code's powerful capabilities</p>
+            </div>
+
+            <div class="arch-grid">
+                <div class="arch-card fade-in">
+                    <span class="arch-number">01</span>
+                    <div class="arch-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <path d="M9 9h6v6H9z"/>
+                        </svg>
+                        Tool System
+                    </div>
+                    <div class="arch-desc">
+                        Every tool is a self-contained module with Zod input schemas, permission models, execution logic, and progress state types. Enables secure, sandboxed operations with full type safety.
+                    </div>
+                    <div class="arch-tags">
+                        <span class="arch-tag">Zod Schema</span>
+                        <span class="arch-tag">Permission Model</span>
+                        <span class="arch-tag">Progress State</span>
+                    </div>
+                </div>
+
+                <div class="arch-card fade-in">
+                    <span class="arch-number">02</span>
+                    <div class="arch-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16v16H4z"/>
+                            <path d="M9 9h6v6H9z"/>
+                        </svg>
+                        Command System
+                    </div>
+                    <div class="arch-desc">
+                        Slash commands invoked with / prefix for user interactions. 103 implementations including /commit, /review, /config, /mcp, /skills, /tasks and more for extensibility.
+                    </div>
+                    <div class="arch-tags">
+                        <span class="arch-tag">103 Commands</span>
+                        <span class="arch-tag">Slash Prefix</span>
+                        <span class="arch-tag">Extensible</span>
+                    </div>
+                </div>
+
+                <div class="arch-card fade-in">
+                    <span class="arch-number">03</span>
+                    <div class="arch-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M12 2v4m0 12v4M2 12h4m12 0h4"/>
+                        </svg>
+                        Service Layer
+                    </div>
+                    <div class="arch-desc">
+                        External integrations organized in services/ with dedicated modules for API clients, MCP protocol, OAuth authentication, LSP servers, analytics, and context compression.
+                    </div>
+                    <div class="arch-tags">
+                        <span class="arch-tag">API Layer</span>
+                        <span class="arch-tag">MCP Protocol</span>
+                        <span class="arch-tag">OAuth</span>
+                    </div>
+                </div>
+
+                <div class="arch-card fade-in">
+                    <span class="arch-number">04</span>
+                    <div class="arch-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                            <polyline points="15 3 21 3 21 9"/>
+                            <line x1="10" y1="14" x2="21" y2="3"/>
+                        </svg>
+                        Bridge System
+                    </div>
+                    <div class="arch-desc">
+                        Bidirectional communication between IDE extensions (VS Code, JetBrains) and CLI. Includes bridgeMain.ts (115KB), replBridge.ts (100KB), and 25+ supporting modules.
+                    </div>
+                    <div class="arch-tags">
+                        <span class="arch-tag">VS Code</span>
+                        <span class="arch-tag">JetBrains</span>
+                        <span class="arch-tag">IPC</span>
+                    </div>
+                </div>
+
+                <div class="arch-card fade-in">
+                    <span class="arch-number">05</span>
+                    <div class="arch-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                        Feature Flags (DCE)
+                    </div>
+                    <div class="arch-desc">
+                        Dead code elimination via Bun's bun:bundle feature flags. Conditional compilation for VOICE_MODE, PROACTIVE, COORDINATOR_MODE, and 9+ other features.
+                    </div>
+                    <div class="arch-tags">
+                        <span class="arch-tag">Bun Bundle</span>
+                        <span class="arch-tag">Tree Shaking</span>
+                        <span class="arch-tag">Conditional</span>
+                    </div>
+                </div>
+
+                <div class="arch-card fade-in">
+                    <span class="arch-number">06</span>
+                    <div class="arch-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                        Parallel Prefetch
+                    </div>
+                    <div class="arch-desc">
+                        Startup optimization by prefetching MDM settings, keychain reads, and API preconnect in parallel. Minimizes cold start latency.
+                    </div>
+                    <div class="arch-tags">
+                        <span class="arch-tag">Startup</span>
+                        <span class="arch-tag">Prefetch</span>
+                        <span class="arch-tag">Parallel</span>
+                    </div>
+                </div>
+
+                <div class="arch-card fade-in">
+                    <span class="arch-number">07</span>
+                    <div class="arch-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                        </svg>
+                        Lazy Loading
+                    </div>
+                    <div class="arch-desc">
+                        Heavy modules (OpenTelemetry, gRPC, analytics) deferred via dynamic import(). Reduces initial bundle size and improves load time.
+                    </div>
+                    <div class="arch-tags">
+                        <span class="arch-tag">Code Splitting</span>
+                        <span class="arch-tag">Dynamic Import</span>
+                        <span class="arch-tag">On-Demand</span>
+                    </div>
+                </div>
+
+                <div class="arch-card fade-in">
+                    <span class="arch-number">08</span>
+                    <div class="arch-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        Multi-Agent Orchestration
+                    </div>
+                    <div class="arch-desc">
+                        Coordinator mode enables multiple agents to work in parallel on complex tasks. Task management with create/update workflows.
+                    </div>
+                    <div class="arch-tags">
+                        <span class="arch-tag">Coordinator</span>
+                        <span class="arch-tag">Parallel Agents</span>
+                        <span class="arch-tag">Task Queue</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature Flags Matrix -->
+    <section class="section" id="features">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-tag">Feature Flags</span>
+                <h2 class="section-title">Build Configuration</h2>
+                <p class="section-desc">Dead code elimination flags via Bun's bun:bundle for optimized builds</p>
+            </div>
+
+            <div class="flags-container fade-in">
+                <div class="flags-grid">
+                    <div class="flag-item">
+                        <div class="flag-status"></div>
+                        <div>
+                            <div class="flag-name">VOICE_MODE</div>
+                            <div class="flag-desc">Voice input support</div>
+                        </div>
+                    </div>
+                    <div class="flag-item">
+                        <div class="flag-status"></div>
+                        <div>
+                            <div class="flag-name">PROACTIVE</div>
+                            <div class="flag-desc">Proactive suggestions</div>
+                        </div>
+                    </div>
+                    <div class="flag-item">
+                        <div class="flag-status"></div>
+                        <div>
+                            <div class="flag-name">KAIROS</div>
+                            <div class="flag-desc">Kairos integration</div>
+                        </div>
+                    </div>
+                    <div class="flag-item">
+                        <div class="flag-status"></div>
+                        <div>
+                            <div class="flag-name">BRIDGE_MODE</div>
+                            <div class="flag-desc">IDE bridge mode</div>
+                        </div>
+                    </div>
+                    <div class="flag-item">
+                        <div class="flag-status"></div>
+                        <div>
+                            <div class="flag-name">DAEMON</div>
+                            <div class="flag-desc">Daemon mode</div>
+                        </div>
+                    </div>
+                    <div class="flag-item">
+                        <div class="flag-status"></div>
+                        <div>
+                            <div class="flag-name">AGENT_TRIGGERS</div>
+                            <div class="flag-desc">Agent triggers</div>
+                        </div>
+                    </div>
+                    <div class="flag-item">
+                        <div class="flag-status"></div>
+                        <div>
+                            <div class="flag-name">MONITOR_TOOL</div>
+                            <div class="flag-desc">Tool monitoring</div>
+                        </div>
+                    </div>
+                    <div class="flag-item">
+                        <div class="flag-status"></div>
+                        <div>
+                            <div class="flag-name">COORDINATOR_MODE</div>
+                            <div class="flag-desc">Multi-agent coordination</div>
+                        </div>
+                    </div>
+                    <div class="flag-item">
+                        <div class="flag-status"></div>
+                        <div>
+                            <div class="flag-name">REACTIVE_COMPACT</div>
+                            <div class="flag-desc">Context compression</div>
+                        </div>
+                    </div>
+                    <div class="flag-item">
+                        <div class="flag-status"></div>
+                        <div>
+                            <div class="flag-name">CONTEXT_COLLAPSE</div>
+                            <div class="flag-desc">Context collapse UI</div>
+                        </div>
+                    </div>
+                    <div class="flag-item">
+                        <div class="flag-status"></div>
+                        <div>
+                            <div class="flag-name">TEMPLATES</div>
+                            <div class="flag-desc">Template support</div>
+                        </div>
+                    </div>
+                    <div class="flag-item">
+                        <div class="flag-status"></div>
+                        <div>
+                            <div class="flag-name">EXPERIMENTAL_SKILL_SEARCH</div>
+                            <div class="flag-desc">Experimental skill search</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Statistics -->
+    <section class="section stats-section" id="stats">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-tag">Scale</span>
+                <h2 class="section-title">Project Statistics</h2>
+                <p class="section-desc">The massive scale of Claude Code's codebase</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-item fade-in">
+                    <div class="stat-icon cyan">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                    </div>
+                    <div class="stat-value" data-count="1900">0</div>
+                    <div class="stat-label">Source Files</div>
+                </div>
+
+                <div class="stat-item fade-in">
+                    <div class="stat-icon magenta">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20h9"/>
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-value" data-count="512000">0</div>
+                    <div class="stat-label">Lines of Code</div>
+                </div>
+
+                <div class="stat-item fade-in">
+                    <div class="stat-icon green">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-value" data-count="55">0</div>
+                    <div class="stat-label">Top Modules</div>
+                </div>
+
+                <div class="stat-item fade-in">
+                    <div class="stat-icon yellow">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"/>
+                            <rect x="14" y="3" width="7" height="7"/>
+                            <rect x="14" y="14" width="7" height="7"/>
+                            <rect x="3" y="14" width="7" height="7"/>
+                        </svg>
+                    </div>
+                    <div class="stat-value" data-count="146">0</div>
+                    <div class="stat-label">UI Components</div>
+                </div>
+
+                <div class="stat-item fade-in">
+                    <div class="stat-icon orange">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                    </div>
+                    <div class="stat-value" data-count="87">0</div>
+                    <div class="stat-label">React Hooks</div>
+                </div>
+
+                <div class="stat-item fade-in">
+                    <div class="stat-icon purple">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                    </div>
+                    <div class="stat-value" data-count="45">0</div>
+                    <div class="stat-label">Tools</div>
+                </div>
+
+                <div class="stat-item fade-in">
+                    <div class="stat-icon cyan">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="4 17 10 11 4 5"/>
+                            <line x1="12" y1="19" x2="20" y2="19"/>
+                        </svg>
+                    </div>
+                    <div class="stat-value" data-count="103">0</div>
+                    <div class="stat-label">Slash Commands</div>
+                </div>
+
+                <div class="stat-item fade-in">
+                    <div class="stat-icon magenta">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+                            <line x1="7" y1="2" x2="7" y2="22"/>
+                            <line x1="17" y1="2" x2="17" y2="22"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
+                            <line x1="2" y1="7" x2="7" y2="7"/>
+                            <line x1="2" y1="17" x2="7" y2="17"/>
+                            <line x1="17" y1="17" x2="22" y2="17"/>
+                            <line x1="17" y1="7" x2="22" y2="7"/>
+                        </svg>
+                    </div>
+                    <div class="stat-value" data-count="331">0</div>
+                    <div class="stat-label">Utils Modules</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Module Size Analysis -->
+    <section class="section" id="modules">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-tag">Module Analysis</span>
+                <h2 class="section-title">Largest Files</h2>
+                <p class="section-desc">The most substantial modules in the codebase by file size</p>
+            </div>
+
+            <div class="chart-container fade-in">
+                <div class="chart-title">File Size Distribution (KB)</div>
+                <div class="bar-chart" id="barChart">
+                    <div class="bar-item">
+                        <span class="bar-label">REPL.tsx</span>
+                        <div class="bar-track">
+                            <div class="bar-fill cyan" style="width: 100%;">895 KB</div>
+                        </div>
+                        <span class="bar-size">895 KB</span>
+                    </div>
+                    <div class="bar-item">
+                        <span class="bar-label">main.tsx</span>
+                        <div class="bar-track">
+                            <div class="bar-fill magenta" style="width: 89.7%;">803 KB</div>
+                        </div>
+                        <span class="bar-size">803 KB</span>
+                    </div>
+                    <div class="bar-item">
+                        <span class="bar-label">useTypeahead.tsx</span>
+                        <div class="bar-track">
+                            <div class="bar-fill green" style="width: 23.7%;">212 KB</div>
+                        </div>
+                        <span class="bar-size">212 KB</span>
+                    </div>
+                    <div class="bar-item">
+                        <span class="bar-label">Messages.tsx</span>
+                        <div class="bar-track">
+                            <div class="bar-fill yellow" style="width: 16.4%;">147 KB</div>
+                        </div>
+                        <span class="bar-size">147 KB</span>
+                    </div>
+                    <div class="bar-item">
+                        <span class="bar-label">useReplBridge.tsx</span>
+                        <div class="bar-track">
+                            <div class="bar-fill orange" style="width: 12.8%;">115 KB</div>
+                        </div>
+                        <span class="bar-size">115 KB</span>
+                    </div>
+                    <div class="bar-item">
+                        <span class="bar-label">MessageSelector.tsx</span>
+                        <div class="bar-track">
+                            <div class="bar-fill purple" style="width: 12.8%;">115 KB</div>
+                        </div>
+                        <span class="bar-size">115 KB</span>
+                    </div>
+                    <div class="bar-item">
+                        <span class="bar-label">ink.tsx</span>
+                        <div class="bar-track">
+                            <div class="bar-fill cyan" style="width: 28%;">251 KB</div>
+                        </div>
+                        <span class="bar-size">251 KB</span>
+                    </div>
+                    <div class="bar-item">
+                        <span class="bar-label">useVoiceIntegration</span>
+                        <div class="bar-track">
+                            <div class="bar-fill magenta" style="width: 11%;">99 KB</div>
+                        </div>
+                        <span class="bar-size">99 KB</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Directory Structure -->
+    <section class="section" id="structure">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-tag">Structure</span>
+                <h2 class="section-title">Directory Overview</h2>
+                <p class="section-desc">Key modules and their roles in the architecture</p>
+            </div>
+
+            <div class="dir-tree fade-in">
+                <div class="tree-container">
+                    <div class="tree-node">
+                        <div class="tree-header">
+                            <div class="tree-icon commands">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="4 17 10 11 4 5"/>
+                                    <line x1="12" y1="19" x2="20" y2="19"/>
+                                </svg>
+                            </div>
+                            <span class="tree-name">commands/</span>
+                        </div>
+                        <div class="tree-count">103</div>
+                        <div class="tree-desc">Slash command implementations</div>
+                        <div class="tree-path">src/commands/</div>
+                    </div>
+
+                    <div class="tree-node">
+                        <div class="tree-header">
+                            <div class="tree-icon tools">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                                </svg>
+                            </div>
+                            <span class="tree-name">tools/</span>
+                        </div>
+                        <div class="tree-count">45</div>
+                        <div class="tree-desc">Tool implementations</div>
+                        <div class="tree-path">src/tools/</div>
+                    </div>
+
+                    <div class="tree-node">
+                        <div class="tree-header">
+                            <div class="tree-icon components">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="7" height="7"/>
+                                    <rect x="14" y="3" width="7" height="7"/>
+                                    <rect x="14" y="14" width="7" height="7"/>
+                                    <rect x="3" y="14" width="7" height="7"/>
+                                </svg>
+                            </div>
+                            <span class="tree-name">components/</span>
+                        </div>
+                        <div class="tree-count">146</div>
+                        <div class="tree-desc">React/Ink UI components</div>
+                        <div class="tree-path">src/components/</div>
+                    </div>
+
+                    <div class="tree-node">
+                        <div class="tree-header">
+                            <div class="tree-icon hooks">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                    <polyline points="22,6 12,13 2,6"/>
+                                </svg>
+                            </div>
+                            <span class="tree-name">hooks/</span>
+                        </div>
+                        <div class="tree-count">87</div>
+                        <div class="tree-desc">React hooks</div>
+                        <div class="tree-path">src/hooks/</div>
+                    </div>
+
+                    <div class="tree-node">
+                        <div class="tree-header">
+                            <div class="tree-icon services">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                                </svg>
+                            </div>
+                            <span class="tree-name">services/</span>
+                        </div>
+                        <div class="tree-count">Multiple</div>
+                        <div class="tree-desc">API, MCP, OAuth, LSP, Analytics</div>
+                        <div class="tree-path">src/services/</div>
+                    </div>
+
+                    <div class="tree-node">
+                        <div class="tree-header">
+                            <div class="tree-icon bridge">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                    <polyline points="15 3 21 3 21 9"/>
+                                    <line x1="10" y1="14" x2="21" y2="3"/>
+                                </svg>
+                            </div>
+                            <span class="tree-name">bridge/</span>
+                        </div>
+                        <div class="tree-count">25+</div>
+                        <div class="tree-desc">IDE bridge (VS Code, JetBrains)</div>
+                        <div class="tree-path">src/bridge/</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Key Files Explorer -->
+    <section class="section" id="files">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-tag">Key Files</span>
+                <h2 class="section-title">Major Modules</h2>
+                <p class="section-desc">Detailed breakdown of the largest and most critical files</p>
+            </div>
+
+            <div class="files-grid">
+                <div class="file-card fade-in">
+                    <div class="file-header">
+                        <div class="file-name">
+                            REPL.tsx
+                            <span class="file-ext">TSX</span>
+                        </div>
+                        <div class="file-size">895 KB</div>
+                    </div>
+                    <div class="file-desc">Main REPL screen component. The primary user interface for interacting with Claude Code in the terminal. Handles message display, user input, and conversation flow.</div>
+                    <div class="file-path">src/screens/REPL.tsx</div>
+                </div>
+
+                <div class="file-card fade-in">
+                    <div class="file-header">
+                        <div class="file-name">
+                            main.tsx
+                            <span class="file-ext">TSX</span>
+                        </div>
+                        <div class="file-size">803 KB</div>
+                    </div>
+                    <div class="file-desc">Primary CLI entry point. Handles Commander.js parsing, React/Ink initialization, and orchestrates the entire application bootstrap process.</div>
+                    <div class="file-path">src/main.tsx</div>
+                </div>
+
+                <div class="file-card fade-in">
+                    <div class="file-header">
+                        <div class="file-name">
+                            useTypeahead.tsx
+                            <span class="file-ext">TSX</span>
+                        </div>
+                        <div class="file-size">212 KB</div>
+                    </div>
+                    <div class="file-desc">Typeahead hook for intelligent command completion. Provides context-aware suggestions as users type commands and arguments.</div>
+                    <div class="file-path">src/hooks/useTypeahead.tsx</div>
+                </div>
+
+                <div class="file-card fade-in">
+                    <div class="file-header">
+                        <div class="file-name">
+                            ink.tsx
+                            <span class="file-ext">TSX</span>
+                        </div>
+                        <div class="file-size">251 KB</div>
+                    </div>
+                    <div class="file-desc">Main Ink renderer wrapper. Bridges React component rendering with Ink's terminal output system. Handles layout, text rendering, and interactive components.</div>
+                    <div class="file-path">src/ink/ink.tsx</div>
+                </div>
+
+                <div class="file-card fade-in">
+                    <div class="file-header">
+                        <div class="file-name">
+                            Messages.tsx
+                            <span class="file-ext">TSX</span>
+                        </div>
+                        <div class="file-size">147 KB</div>
+                    </div>
+                    <div class="file-desc">Message display component. Renders conversation messages with Markdown support, code syntax highlighting, and file diffs.</div>
+                    <div class="file-path">src/components/Messages.tsx</div>
+                </div>
+
+                <div class="file-card fade-in">
+                    <div class="file-header">
+                        <div class="file-name">
+                            query.ts
+                            <span class="file-ext">TS</span>
+                        </div>
+                        <div class="file-size">68 KB</div>
+                    </div>
+                    <div class="file-desc">Query pipeline implementation. Manages the flow of queries through the system including context gathering, query construction, and response processing.</div>
+                    <div class="file-path">src/query.ts</div>
+                </div>
+
+                <div class="file-card fade-in">
+                    <div class="file-header">
+                        <div class="file-name">
+                            QueryEngine.ts
+                            <span class="file-ext">TS</span>
+                        </div>
+                        <div class="file-size">46 KB</div>
+                    </div>
+                    <div class="file-desc">LLM query engine. Handles communication with the Anthropic API, manages model parameters, token limits, and response parsing.</div>
+                    <div class="file-path">src/QueryEngine.ts</div>
+                </div>
+
+                <div class="file-card fade-in">
+                    <div class="file-header">
+                        <div class="file-name">
+                            bridgeMain.ts
+                            <span class="file-ext">TS</span>
+                        </div>
+                        <div class="file-size">115 KB</div>
+                    </div>
+                    <div class="file-desc">Bridge main loop for IDE integration. Handles bidirectional communication between Claude Code CLI and IDE extensions.</div>
+                    <div class="file-path">src/bridge/bridgeMain.ts</div>
+                </div>
+
+                <div class="file-card fade-in">
+                    <div class="file-header">
+                        <div class="file-name">
+                            replBridge.ts
+                            <span class="file-ext">TS</span>
+                        </div>
+                        <div class="file-size">100 KB</div>
+                    </div>
+                    <div class="file-desc">REPL session bridge. Manages REPL state synchronization and message passing between the CLI and connected IDE sessions.</div>
+                    <div class="file-path">src/bridge/replBridge.ts</div>
+                </div>
+
+                <div class="file-card fade-in">
+                    <div class="file-header">
+                        <div class="file-name">
+                            Tool.ts
+                            <span class="file-ext">TS</span>
+                        </div>
+                        <div class="file-size">29 KB</div>
+                    </div>
+                    <div class="file-desc">Tool base type definitions. Defines the core Tool interface, permission models, execution contexts, and progress state types.</div>
+                    <div class="file-path">src/tools/Tool.ts</div>
+                </div>
+
+                <div class="file-card fade-in">
+                    <div class="file-header">
+                        <div class="file-name">
+                            commands.ts
+                            <span class="file-ext">TS</span>
+                        </div>
+                        <div class="file-size">25 KB</div>
+                    </div>
+                    <div class="file-desc">Command registry. Central registry mapping slash command names to their implementations. Handles command routing and help generation.</div>
+                    <div class="file-path">src/commands.ts</div>
+                </div>
+
+                <div class="file-card fade-in">
+                    <div class="file-header">
+                        <div class="file-name">
+                            useVoiceIntegration.tsx
+                            <span class="file-ext">TSX</span>
+                        </div>
+                        <div class="file-size">99 KB</div>
+                    </div>
+                    <div class="file-desc">Voice integration hook. Handles voice input processing, transcription, and integration with voice command system.</div>
+                    <div class="file-path">src/hooks/useVoiceIntegration.tsx</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p class="footer-text">
+            Claude Code Source Analysis Report · Generated <span>2026</span> · Built with analysis of <span>1,900+</span> source files
+        </p>
+    </footer>
+
+    <script>
+        // Intersection Observer for fade-in animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Counter animation
+        function animateCounter(element, target, duration = 2000) {
+            const start = 0;
+            const startTime = performance.now();
+            const suffix = element.dataset.suffix || '';
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const current = Math.floor(start + (target - start) * easeOut);
+
+                element.textContent = current.toLocaleString() + suffix;
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        // Observe counters
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !entry.target.dataset.animated) {
+                    entry.target.dataset.animated = 'true';
+                    const target = parseInt(entry.target.dataset.count);
+                    animateCounter(entry.target, target);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        document.querySelectorAll('[data-count]').forEach(el => {
+            counterObserver.observe(el);
+        });
+
+        // Animate bars on scroll
+        const barObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const bars = entry.target.querySelectorAll('.bar-fill');
+                    bars.forEach((bar, index) => {
+                        const width = bar.style.width;
+                        bar.style.width = '0%';
+                        setTimeout(() => {
+                            bar.style.width = width;
+                        }, index * 100);
+                    });
+                    barObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.3 });
+
+        const barChart = document.getElementById('barChart');
+        if (barChart) {
+            barObserver.observe(barChart);
+        }
+    </script>
+</body>
+</html>
