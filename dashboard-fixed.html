@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数据看板 / Data Command</title>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg-primary:#0a0a0f;
+    --bg-card:rgba(15,15,25,0.85);
+    --bg-card-hover:rgba(20,20,35,0.95);
+    --border:rgba(80,200,255,0.08);
+    --border-glow:rgba(80,200,255,0.25);
+    --text-primary:#e8ecf4;
+    --text-secondary:#7a8599;
+    --text-muted:#4a5568;
+    --accent-cyan:#00d4ff;
+    --accent-violet:#8b5cf6;
+    --accent-rose:#f43f5e;
+    --accent-amber:#f59e0b;
+    --accent-emerald:#10b981;
+    --accent-cyan-dim:rgba(0,212,255,0.12);
+    --accent-violet-dim:rgba(139,92,246,0.12);
+    --accent-rose-dim:rgba(244,63,94,0.12);
+    --accent-amber-dim:rgba(245,158,11,0.12);
+    --accent-emerald-dim:rgba(16,185,129,0.12);
+    --radius:12px;
+    --radius-sm:8px;
+    --shadow:0 4px 24px rgba(0,0,0,0.4);
+    --font-display:'Outfit',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+  }
+  html{font-size:16px;-webkit-font-smoothing:antialiased}
+  body{
+    font-family:var(--font-display);
+    background:var(--bg-primary);
+    color:var(--text-primary);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:'';position:fixed;inset:0;z-index:0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 10%,rgba(0,212,255,0.06),transparent),
+      radial-gradient(ellipse 60% 40% at 80% 80%,rgba(139,92,246,0.05),transparent),
+      radial-gradient(ellipse 50% 50% at 50% 50%,rgba(244,63,94,0.03),transparent);
+    pointer-events:none;
+  }
+  #app{position:relative;z-index:1}
+
+  .dashboard-shell{
+    max-width:1440px;margin:0 auto;
+    padding:24px 28px 48px;
+  }
+
+  /* Header */
+  .dash-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:32px;flex-wrap:wrap;gap:16px;
+  }
+  .dash-header h1{
+    font-size:1.75rem;font-weight:700;letter-spacing:-0.03em;
+    background:linear-gradient(135deg,var(--accent-cyan),var(--accent-violet));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .dash-header .subtitle{
+    font-family:var(--font-mono);font-size:0.75rem;
+    color:var(--text-muted);letter-spacing:0.04em;margin-top:4px;
+  }
+  .header-right{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .live-badge{
+    display:flex;align-items:center;gap:6px;
+    font-family:var(--font-mono);font-size:0.7rem;
+    color:var(--accent-emerald);text-transform:uppercase;letter-spacing:0.08em;
+  }
+  .live-dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--accent-emerald);
+    box-shadow:0 0 8px var(--accent-emerald);
+    animation:pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot{
+    0%,100%{opacity:1;transform:scale(1)}
+    50%{opacity:0.5;transform:scale(0.8)}
+  }
+  .clock{
+    font-family:var(--font-mono);font-size:0.85rem;
+    color:var(--text-secondary);letter-spacing:0.02em;
+    background:var(--bg-card);border:1px solid var(--border);
+    padding:6px 14px;border-radius:var(--radius-sm);
+  }
+
+  /* KPI Cards */
+  .kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:16px;margin-bottom:24px;
+  }
+  .kpi-card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px 22px;
+    position:relative;overflow:hidden;
+    transition:all 0.35s cubic-bezier(0.4,0,0.2,1);
+    backdrop-filter:blur(12px);
+  }
+  .kpi-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    opacity:0;transition:opacity 0.35s;
+  }
+  .kpi-card:hover{
+    border-color:var(--border-glow);
+    background:var(--bg-card-hover);
+    transform:translateY(-2px);
+    box-shadow:var(--shadow);
+  }
+  .kpi-card:hover::before{opacity:1}
+  .kpi-card.cyan::before{background:linear-gradient(90deg,var(--accent-cyan),transparent)}
+  .kpi-card.violet::before{background:linear-gradient(90deg,var(--accent-violet),transparent)}
+  .kpi-card.rose::before{background:linear-gradient(90deg,var(--accent-rose),transparent)}
+  .kpi-card.amber::before{background:linear-gradient(90deg,var(--accent-amber),transparent)}
+
+  .kpi-icon{
+    width:36px;height:36px;border-radius:var(--radius-sm);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.1rem;margin-bottom:14px;
+  }
+  .kpi-card.cyan .kpi-icon{background:var(--accent-cyan-dim);color:var(--accent-cyan)}
+  .kpi-card.violet .kpi-icon{background:var(--accent-violet-dim);color:var(--accent-violet)}
+  .kpi-card.rose .kpi-icon{background:var(--accent-rose-dim);color:var(--accent-rose)}
+  .kpi-card.amber .kpi-icon{background:var(--accent-amber-dim);color:var(--accent-amber)}
+
+  .kpi-label{
+    font-size:0.75rem;color:var(--text-secondary);
+    text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;
+  }
+  .kpi-value{
+    font-size:1.65rem;font-weight:700;letter-spacing:-0.02em;
+    font-variant-numeric:tabular-nums;
+  }
+  .kpi-change{
+    display:inline-flex;align-items:center;gap:3px;
+    font-family:var(--font-mono);font-size:0.7rem;
+    margin-top:8px;padding:2px 8px;border-radius:20px;
+  }
+  .kpi-change.up{background:var(--accent-emerald-dim);color:var(--accent-emerald)}
+  .kpi-change.down{background:var(--accent-rose-dim);color:var(--accent-rose)}
+
+  /* Chart Grid */
+  .chart-grid{
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:16px;margin-bottom:24px;
+  }
+  .chart-panel{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:22px;
+    backdrop-filter:blur(12px);
+    transition:border-color 0.3s;
+  }
+  .chart-panel:hover{border-color:var(--border-glow)}
+  .panel-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .panel-title{
+    font-size:0.9rem;font-weight:600;letter-spacing:-0.01em;
+  }
+  .panel-badge{
+    font-family:var(--font-mono);font-size:0.65rem;
+    color:var(--text-muted);letter-spacing:0.04em;
+    background:rgba(255,255,255,0.04);padding:3px 10px;
+    border-radius:20px;border:1px solid var(--border);
+  }
+  .chart-wrap{position:relative;width:100%;height:260px}
+  .chart-wrap canvas{width:100%!important;height:100%!important}
+
+  /* Bottom Grid */
+  .bottom-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+
+  /* Data Table */
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse}
+  thead th{
+    font-family:var(--font-mono);font-size:0.68rem;
+    text-transform:uppercase;letter-spacing:0.06em;
+    color:var(--text-muted);text-align:left;
+    padding:10px 14px;border-bottom:1px solid var(--border);
+    cursor:pointer;user-select:none;white-space:nowrap;
+  }
+  thead th:hover{color:var(--text-secondary)}
+  thead th .sort-arrow{margin-left:4px;font-size:0.6rem;opacity:0.5}
+  thead th.active .sort-arrow{opacity:1;color:var(--accent-cyan)}
+  tbody td{
+    font-size:0.82rem;padding:11px 14px;
+    border-bottom:1px solid rgba(255,255,255,0.03);
+    font-variant-numeric:tabular-nums;
+  }
+  tbody tr{transition:background 0.2s}
+  tbody tr:hover{background:rgba(255,255,255,0.02)}
+  .status-pill{
+    display:inline-block;padding:2px 10px;border-radius:20px;
+    font-size:0.7rem;font-weight:500;
+  }
+  .status-pill.active{background:var(--accent-emerald-dim);color:var(--accent-emerald)}
+  .status-pill.pending{background:var(--accent-amber-dim);color:var(--accent-amber)}
+  .status-pill.inactive{background:var(--accent-rose-dim);color:var(--accent-rose)}
+
+  /* Activity Feed */
+  .activity-list{list-style:none;display:flex;flex-direction:column;gap:0}
+  .activity-item{
+    display:flex;align-items:flex-start;gap:12px;
+    padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.03);
+  }
+  .activity-item:last-child{border-bottom:none}
+  .activity-dot{
+    width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;
+  }
+  .activity-dot.cyan{background:var(--accent-cyan);box-shadow:0 0 6px var(--accent-cyan-dim)}
+  .activity-dot.violet{background:var(--accent-violet);box-shadow:0 0 6px var(--accent-violet-dim)}
+  .activity-dot.rose{background:var(--accent-rose);box-shadow:0 0 6px var(--accent-rose-dim)}
+  .activity-dot.amber{background:var(--accent-amber);box-shadow:0 0 6px var(--accent-amber-dim)}
+  .activity-dot.emerald{background:var(--accent-emerald);box-shadow:0 0 6px var(--accent-emerald-dim)}
+  .activity-text{font-size:0.8rem;color:var(--text-secondary);line-height:1.5}
+  .activity-text strong{color:var(--text-primary);font-weight:500}
+  .activity-time{
+    font-family:var(--font-mono);font-size:0.65rem;
+    color:var(--text-muted);margin-top:2px;
+  }
+
+  /* Progress Bars */
+  .progress-section{margin-top:4px}
+  .progress-item{margin-bottom:16px}
+  .progress-item:last-child{margin-bottom:0}
+  .progress-meta{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:6px;
+  }
+  .progress-label{font-size:0.78rem;color:var(--text-secondary)}
+  .progress-val{
+    font-family:var(--font-mono);font-size:0.72rem;
+    color:var(--text-primary);
+  }
+  .progress-track{
+    width:100%;height:5px;border-radius:10px;
+    background:rgba(255,255,255,0.05);overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;border-radius:10px;
+    transition:width 1.2s cubic-bezier(0.4,0,0.2,1);
+  }
+  .progress-fill.cyan{background:linear-gradient(90deg,var(--accent-cyan),rgba(0,212,255,0.5))}
+  .progress-fill.violet{background:linear-gradient(90deg,var(--accent-violet),rgba(139,92,246,0.5))}
+  .progress-fill.rose{background:linear-gradient(90deg,var(--accent-rose),rgba(244,63,94,0.5))}
+  .progress-fill.amber{background:linear-gradient(90deg,var(--accent-amber),rgba(245,158,11,0.5))}
+
+  /* Responsive */
+  @media(max-width:1100px){
+    .kpi-grid{grid-template-columns:repeat(2,1fr)}
+    .chart-grid{grid-template-columns:1fr}
+    .bottom-grid{grid-template-columns:1fr}
+  }
+  @media(max-width:640px){
+    .dashboard-shell{padding:16px 12px 32px}
+    .kpi-grid{grid-template-columns:1fr}
+    .dash-header h1{font-size:1.35rem}
+    .kpi-value{font-size:1.35rem}
+    .chart-wrap{height:200px}
+  }
+
+  /* Entrance Animations */
+  .fade-up{
+    opacity:0;transform:translateY(16px);
+    animation:fadeUp 0.6s cubic-bezier(0.4,0,0.2,1) forwards;
+  }
+  @keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+  .delay-1{animation-delay:0.08s}
+  .delay-2{animation-delay:0.16s}
+  .delay-3{animation-delay:0.24s}
+  .delay-4{animation-delay:0.32s}
+  .delay-5{animation-delay:0.40s}
+  .delay-6{animation-delay:0.48s}
+  .delay-7{animation-delay:0.56s}
+
+  /* Scrollbar */
+  ::-webkit-scrollbar{width:5px;height:5px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:10px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="dashboard-shell">
+    <!-- Header -->
+    <header class="dash-header fade-up">
+      <div>
+        <h1>数据指挥中心</h1>
+        <div class="subtitle">DATA COMMAND CENTER &mdash; REAL-TIME ANALYTICS</div>
+      </div>
+      <div class="header-right">
+        <div class="live-badge"><span class="live-dot"></span> LIVE</div>
+        <div class="clock">{{ currentTime }}</div>
+      </div>
+    </header>
+
+    <!-- KPI Cards -->
+    <section class="kpi-grid">
+      <div v-for="(kpi, i) in kpis" :key="kpi.id"
+           class="kpi-card fade-up"
+           :class="[kpi.color, 'delay-' + (i + 1)]">
+        <div class="kpi-icon">{{ kpi.icon }}</div>
+        <div class="kpi-label">{{ kpi.label }}</div>
+        <div class="kpi-value">{{ kpi.value }}</div>
+        <span class="kpi-change" :class="kpi.changeDir">
+          {{ kpi.changeDir === 'up' ? '▲' : '▼' }} {{ kpi.change }}
+        </span>
+      </div>
+    </section>
+
+    <!-- Charts -->
+    <section class="chart-grid">
+      <div class="chart-panel fade-up delay-5">
+        <div class="panel-header">
+          <span class="panel-title">营收趋势 / Revenue Trend</span>
+          <span class="panel-badge">近 12 个月</span>
+        </div>
+        <div class="chart-wrap"><canvas ref="revenueChart"></canvas></div>
+      </div>
+      <div class="chart-panel fade-up delay-6">
+        <div class="panel-header">
+          <span class="panel-title">渠道分布 / Channels</span>
+          <span class="panel-badge">本季度</span>
+        </div>
+        <div class="chart-wrap"><canvas ref="channelChart"></canvas></div>
+      </div>
+    </section>
+
+    <!-- Bottom Section -->
+    <section class="bottom-grid">
+      <!-- Table -->
+      <div class="chart-panel fade-up delay-5">
+        <div class="panel-header">
+          <span class="panel-title">项目概览 / Projects</span>
+          <span class="panel-badge">{{ projects.length }} 项</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th v-for="col in tableCols" :key="col.key"
+                    :class="{active: sortKey===col.key}"
+                    @click="toggleSort(col.key)">
+                  {{ col.label }}
+                  <span class="sort-arrow">{{ sortKey===col.key?(sortAsc?'▲':'▼'):'⇅' }}</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="p in sortedProjects" :key="p.name">
+                <td><strong>{{ p.name }}</strong></td>
+                <td>{{ p.lead }}</td>
+                <td><span class="status-pill" :class="p.status">{{ statusLabel(p.status) }}</span></td>
+                <td style="font-family:var(--font-mono)">¥{{ p.budget.toLocaleString() }}</td>
+                <td style="font-family:var(--font-mono)">{{ p.progress }}%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Right Column: Activity + Progress -->
+      <div class="chart-panel fade-up delay-6">
+        <div class="panel-header">
+          <span class="panel-title">实时动态 / Activity</span>
+        </div>
+        <ul class="activity-list">
+          <li v-for="(a, i) in activities" :key="i" class="activity-item">
+            <span class="activity-dot" :class="a.color"></span>
+            <div>
+              <div class="activity-text" v-html="a.text"></div>
+              <div class="activity-time">{{ a.time }}</div>
+            </div>
+          </li>
+        </ul>
+
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.05)">
+          <div class="panel-header" style="margin-bottom:14px">
+            <span class="panel-title">目标进度 / Goals</span>
+          </div>
+          <div class="progress-section">
+            <div v-for="g in goals" :key="g.label" class="progress-item">
+              <div class="progress-meta">
+                <span class="progress-label">{{ g.label }}</span>
+                <span class="progress-val">{{ g.value }}%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" :class="g.color"
+                     :style="{width: mounted ? g.value+'%' : '0%'}"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
+
+createApp({
+  setup() {
+    const mounted = ref(false);
+    const currentTime = ref('');
+    let clockTimer = null;
+
+    const kpis = ref([
+      { id:'revenue', label:'总营收', icon:'¥', value:'¥2,847,630', change:'+12.4%', changeDir:'up', color:'cyan' },
+      { id:'users',   label:'活跃用户', icon:'◉', value:'186,432', change:'+8.7%', changeDir:'up', color:'violet' },
+      { id:'orders',  label:'订单量', icon:'◫', value:'34,891', change:'+5.2%', changeDir:'up', color:'amber' },
+      { id:'churn',   label:'流失率', icon:'◿', value:'2.3%', change:'-0.4%', changeDir:'down', color:'rose' },
+    ]);
+
+    const projects = ref([
+      { name:'Phoenix 重构', lead:'张明', status:'active', budget:480000, progress:72 },
+      { name:'Atlas 数据平台', lead:'李薇', status:'active', budget:320000, progress:45 },
+      { name:'Orbit 移动端', lead:'王浩', status:'pending', budget:210000, progress:18 },
+      { name:'Nexus API 网关', lead:'赵芳', status:'active', budget:150000, progress:89 },
+      { name:'Vortex ML 引擎', lead:'陈杰', status:'inactive', budget:560000, progress:5 },
+      { name:'Pulse 监控系统', lead:'刘洋', status:'active', budget:95000, progress:61 },
+    ]);
+
+    const tableCols = [
+      { key:'name', label:'项目名称' },
+      { key:'lead', label:'负责人' },
+      { key:'status', label:'状态' },
+      { key:'budget', label:'预算' },
+      { key:'progress', label:'进度' },
+    ];
+
+    const sortKey = ref('progress');
+    const sortAsc = ref(false);
+
+    const sortedProjects = computed(() => {
+      const arr = [...projects.value];
+      const k = sortKey.value;
+      arr.sort((a, b) => {
+        let va = a[k], vb = b[k];
+        if (typeof va === 'string') { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+        if (va < vb) return sortAsc.value ? -1 : 1;
+        if (va > vb) return sortAsc.value ? 1 : -1;
+        return 0;
+      });
+      return arr;
+    });
+
+    function toggleSort(key) {
+      if (sortKey.value === key) { sortAsc.value = !sortAsc.value; }
+      else { sortKey.value = key; sortAsc.value = true; }
+    }
+
+    function statusLabel(s) {
+      return { active:'进行中', pending:'待启动', inactive:'已暂停' }[s] || s;
+    }
+
+    const activities = ref([
+      { text:'<strong>张明</strong> 提交了 Phoenix v2.1 版本代码', time:'2 分钟前', color:'cyan' },
+      { text:'<strong>李薇</strong> 完成 Atlas 数据迁移任务', time:'18 分钟前', color:'emerald' },
+      { text:'系统检测到 <strong>API 响应延迟</strong> 上升至 320ms', time:'45 分钟前', color:'amber' },
+      { text:'<strong>赵芳</strong> 关闭了 3 个高优先级 Issue', time:'1 小时前', color:'violet' },
+      { text:'<strong>Vortex</strong> 训练管线因 GPU 配额暂停', time:'2 小时前', color:'rose' },
+    ]);
+
+    const goals = ref([
+      { label:'季度营收目标', value:73, color:'cyan' },
+      { label:'用户增长目标', value:58, color:'violet' },
+      { label:'产品上线率', value:85, color:'amber' },
+      { label:'客户满意度', value:91, color:'rose' },
+    ]);
+
+    const revenueChart = ref(null);
+    const channelChart = ref(null);
+
+    function updateClock() {
+      const now = new Date();
+      currentTime.value = now.toLocaleTimeString('zh-CN', { hour12: false }) +
+        ' · ' + now.toLocaleDateString('zh-CN', { month:'short', day:'numeric', weekday:'short' });
+    }
+
+    function initCharts() {
+      if (!revenueChart.value || !channelChart.value) return;
+
+      const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+      const revenueData = [180,210,195,240,220,260,285,270,310,295,330,348];
+      const costData = [120,130,125,150,140,155,165,160,180,175,190,195];
+
+      // Line Chart
+      const lineCtx = revenueChart.value.getContext('2d');
+      const cyanGrad = lineCtx.createLinearGradient(0,0,0,260);
+      cyanGrad.addColorStop(0,'rgba(0,212,255,0.2)');
+      cyanGrad.addColorStop(1,'rgba(0,212,255,0)');
+      const violetGrad = lineCtx.createLinearGradient(0,0,0,260);
+      violetGrad.addColorStop(0,'rgba(139,92,246,0.15)');
+      violetGrad.addColorStop(1,'rgba(139,92,246,0)');
+
+      new Chart(lineCtx, {
+        type:'line',
+        data:{
+          labels:months,
+          datasets:[
+            {
+              label:'营收 (万)',
+              data:revenueData,
+              borderColor:'#00d4ff',
+              backgroundColor:cyanGrad,
+              borderWidth:2,
+              fill:true,
+              tension:0.4,
+              pointRadius:0,
+              pointHoverRadius:5,
+              pointHoverBackgroundColor:'#00d4ff',
+            },
+            {
+              label:'成本 (万)',
+              data:costData,
+              borderColor:'#8b5cf6',
+              backgroundColor:violetGrad,
+              borderWidth:2,
+              fill:true,
+              tension:0.4,
+              pointRadius:0,
+              pointHoverRadius:5,
+              pointHoverBackgroundColor:'#8b5cf6',
+            }
+          ]
+        },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          interaction:{mode:'index',intersect:false},
+          plugins:{
+            legend:{
+              display:true,
+              position:'top',
+              align:'end',
+              labels:{
+                color:'#7a8599',
+                font:{family:'JetBrains Mono',size:10},
+                boxWidth:12,boxHeight:2,
+                padding:16,usePointStyle:false,
+              }
+            },
+            tooltip:{
+              backgroundColor:'rgba(10,10,15,0.95)',
+              borderColor:'rgba(80,200,255,0.15)',
+              borderWidth:1,
+              titleFont:{family:'Outfit',size:12,weight:'600'},
+              bodyFont:{family:'JetBrains Mono',size:11},
+              titleColor:'#e8ecf4',
+              bodyColor:'#7a8599',
+              padding:12,
+              cornerRadius:8,
+              displayColors:true,
+              boxWidth:8,boxHeight:8,boxPadding:4,
+            }
+          },
+          scales:{
+            x:{
+              grid:{color:'rgba(255,255,255,0.03)',drawBorder:false},
+              ticks:{color:'#4a5568',font:{family:'JetBrains Mono',size:10}},
+              border:{display:false},
+            },
+            y:{
+              grid:{color:'rgba(255,255,255,0.03)',drawBorder:false},
+              ticks:{color:'#4a5568',font:{family:'JetBrains Mono',size:10}},
+              border:{display:false},
+            }
+          }
+        }
+      });
+
+      // Doughnut Chart
+      const doughnutCtx = channelChart.value.getContext('2d');
+      new Chart(doughnutCtx, {
+        type:'doughnut',
+        data:{
+          labels:['自然搜索','付费推广','社交媒体','邮件营销','直接访问'],
+          datasets:[{
+            data:[35,25,20,12,8],
+            backgroundColor:['#00d4ff','#8b5cf6','#f43f5e','#f59e0b','#10b981'],
+            borderColor:'#0a0a0f',
+            borderWidth:3,
+            hoverOffset:6,
+          }]
+        },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          cutout:'68%',
+          plugins:{
+            legend:{
+              position:'bottom',
+              labels:{
+                color:'#7a8599',
+                font:{family:'Outfit',size:11},
+                padding:12,
+                boxWidth:10,boxHeight:10,
+                usePointStyle:true,pointStyleWidth:10,
+              }
+            },
+            tooltip:{
+              backgroundColor:'rgba(10,10,15,0.95)',
+              borderColor:'rgba(80,200,255,0.15)',
+              borderWidth:1,
+              titleFont:{family:'Outfit',size:12,weight:'600'},
+              bodyFont:{family:'JetBrains Mono',size:11},
+              titleColor:'#e8ecf4',
+              bodyColor:'#7a8599',
+              padding:12,cornerRadius:8,
+              callbacks:{
+                label(ctx) {
+                  return ' ' + ctx.label + ': ' + ctx.parsed + '%';
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    onMounted(() => {
+      updateClock();
+      clockTimer = setInterval(updateClock, 1000);
+      setTimeout(() => {
+        initCharts();
+        mounted.value = true;
+      }, 100);
+    });
+
+    onUnmounted(() => {
+      if (clockTimer) clearInterval(clockTimer);
+    });
+
+    return {
+      mounted, currentTime, kpis,
+      projects, tableCols, sortKey, sortAsc, sortedProjects,
+      toggleSort, statusLabel, activities, goals,
+      revenueChart, channelChart,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
