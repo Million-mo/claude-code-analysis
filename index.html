@@ -1745,6 +1745,349 @@
         </div>
     </section>
 
+    <!-- System Report Section -->
+    <section class="section" id="system-report" style="padding-bottom: 60px;">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-tag" style="background: rgba(255, 136, 0, 0.1); border-color: var(--accent-orange); color: var(--accent-orange);">Deep Analysis</span>
+                <h2 class="section-title">0331 系统报告</h2>
+                <p class="section-desc">基于 2026.03.31 npm Source Map 泄露版本的深度技术分析 · v0.019</p>
+            </div>
+
+            <!-- Report Stats -->
+            <div class="hero-meta fade-in" style="margin-bottom: 60px;">
+                <div class="meta-item">
+                    <span class="meta-value" style="font-size: 36px; color: var(--accent-orange); text-shadow: 0 0 20px rgba(255, 136, 0, 0.5);" data-count="136">0</span>
+                    <span class="meta-label">Pages</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-value" style="font-size: 36px; color: var(--accent-orange); text-shadow: 0 0 20px rgba(255, 136, 0, 0.5);" data-count="30">0</span>
+                    <span class="meta-label">Chapters</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-value" style="font-size: 36px; color: var(--accent-orange); text-shadow: 0 0 20px rgba(255, 136, 0, 0.5);" data-count="12">0</span>
+                    <span class="meta-label">Parts</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-value" style="font-size: 36px; color: var(--accent-orange); text-shadow: 0 0 20px rgba(255, 136, 0, 0.5);" data-count="6">0</span>
+                    <span class="meta-label">Appendices</span>
+                </div>
+            </div>
+
+            <!-- PDF Viewer -->
+            <div class="fade-in" style="margin-bottom: 60px;">
+                <div style="background: var(--bg-card); border: 1px solid rgba(255, 136, 0, 0.3); border-radius: 16px; overflow: hidden; backdrop-filter: blur(10px);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid rgba(255, 136, 0, 0.2); background: rgba(255, 136, 0, 0.05);">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-orange)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                            <span style="font-size: 14px; color: var(--accent-orange); letter-spacing: 1px;">Claude Code 0331 系统报告.pdf</span>
+                        </div>
+                        <a href="Claude Code 0331 系统报告.pdf" download style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; background: rgba(255, 136, 0, 0.15); border: 1px solid var(--accent-orange); border-radius: 8px; color: var(--accent-orange); text-decoration: none; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.background='rgba(255,136,0,0.3)';this.style.boxShadow='0 0 20px rgba(255,136,0,0.3)'" onmouseout="this.style.background='rgba(255,136,0,0.15)';this.style.boxShadow='none'">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Download PDF
+                        </a>
+                    </div>
+                    <iframe src="Claude Code 0331 系统报告.pdf" style="width: 100%; height: 800px; border: none; background: #1a1a2e;" title="Claude Code 0331 系统报告"></iframe>
+                </div>
+            </div>
+
+            <!-- Table of Contents -->
+            <div class="fade-in" style="margin-bottom: 40px;">
+                <h3 style="font-family: 'Orbitron', sans-serif; font-size: 24px; color: var(--accent-orange); margin-bottom: 30px; text-align: center; filter: drop-shadow(0 0 10px rgba(255, 136, 0, 0.4));">Report Contents</h3>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 24px;">
+                <!-- Part 1 -->
+                <div class="tech-card fade-in" style="border-color: rgba(255, 136, 0, 0.2);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(255, 136, 0, 0.15); border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--accent-orange); font-weight: 700;">I</span>
+                        <h4 style="font-size: 14px; color: var(--accent-orange); letter-spacing: 1px;">背景与概览</h4>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="padding: 10px 14px; background: rgba(255, 136, 0, 0.05); border-radius: 8px; border-left: 2px solid rgba(255, 136, 0, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第1章 · 事件始末</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">npm Source Map泄露的完整经过与社区反应</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(255, 136, 0, 0.05); border-radius: 8px; border-left: 2px solid rgba(255, 136, 0, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第2章 · 全景统计</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">1,884文件、394,222行代码、技术栈全景</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part 2 -->
+                <div class="tech-card fade-in" style="border-color: rgba(0, 255, 242, 0.2);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(0, 255, 242, 0.15); border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--accent-cyan); font-weight: 700;">II</span>
+                        <h4 style="font-size: 14px; color: var(--accent-cyan); letter-spacing: 1px;">核心架构深度解析</h4>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="padding: 10px 14px; background: rgba(0, 255, 242, 0.03); border-radius: 8px; border-left: 2px solid rgba(0, 255, 242, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第3章 · 启动系统与多模式架构</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">多层快速路径系统与启动优化</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(0, 255, 242, 0.03); border-radius: 8px; border-left: 2px solid rgba(0, 255, 242, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第4章 · 查询引擎（QueryEngine）</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">异步生成器模式的核心查询循环</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(0, 255, 242, 0.03); border-radius: 8px; border-left: 2px solid rgba(0, 255, 242, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第5章 · Token经济学与上下文管理</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">Snip压缩与渐进式Token回收机制</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(0, 255, 242, 0.03); border-radius: 8px; border-left: 2px solid rgba(0, 255, 242, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第6章 · 上下文系统</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">Git状态感知与CLAUDE.md层级合并</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part 3 -->
+                <div class="tech-card fade-in" style="border-color: rgba(0, 255, 136, 0.2);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(0, 255, 136, 0.15); border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--accent-green); font-weight: 700;">III</span>
+                        <h4 style="font-size: 14px; color: var(--accent-green); letter-spacing: 1px;">工具系统全解</h4>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="padding: 10px 14px; background: rgba(0, 255, 136, 0.03); border-radius: 8px; border-left: 2px solid rgba(0, 255, 136, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第7章 · 工具架构</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">Tool.ts统一接口与泛型工具定义</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(0, 255, 136, 0.03); border-radius: 8px; border-left: 2px solid rgba(0, 255, 136, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第8章 · 54个工具逐一拆解</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">Read、Edit、Bash、Grep等全部工具详解</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(0, 255, 136, 0.03); border-radius: 8px; border-left: 2px solid rgba(0, 255, 136, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第9章 · BashTool安全深度分析</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">Shell元字符检测与命令安全沙箱</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(0, 255, 136, 0.03); border-radius: 8px; border-left: 2px solid rgba(0, 255, 136, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第10章 · 权限模型</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">Allow/Deny规则链与用户确认流程</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part 4 -->
+                <div class="tech-card fade-in" style="border-color: rgba(255, 0, 255, 0.2);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(255, 0, 255, 0.15); border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--accent-magenta); font-weight: 700;">IV</span>
+                        <h4 style="font-size: 14px; color: var(--accent-magenta); letter-spacing: 1px;">KAIROS与自主Agent系统</h4>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="padding: 10px 14px; background: rgba(255, 0, 255, 0.03); border-radius: 8px; border-left: 2px solid rgba(255, 0, 255, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第11章 · KAIROS：自主助手模式全解</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">57个文件158次引用的核心自主系统</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(255, 0, 255, 0.03); border-radius: 8px; border-left: 2px solid rgba(255, 0, 255, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第12章 · DreamTask与自动记忆巩固</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">Sleep/Wake周期与会话回顾机制</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(255, 0, 255, 0.03); border-radius: 8px; border-left: 2px solid rgba(255, 0, 255, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第13章 · 多Agent系统：三条技术路线</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">Leader-Worker架构与Coordinator编排</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part 5 -->
+                <div class="tech-card fade-in" style="border-color: rgba(255, 255, 0, 0.2);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(255, 255, 0, 0.15); border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--accent-yellow); font-weight: 700;">V</span>
+                        <h4 style="font-size: 14px; color: var(--accent-yellow); letter-spacing: 1px;">记忆与知识系统</h4>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="padding: 10px 14px; background: rgba(255, 255, 0, 0.03); border-radius: 8px; border-left: 2px solid rgba(255, 255, 0, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第14章 · 四层记忆架构</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">从短期会话到长期团队知识的完整AI认知记忆体系</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part 6 -->
+                <div class="tech-card fade-in" style="border-color: rgba(136, 0, 255, 0.2);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(136, 0, 255, 0.15); border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--accent-purple); font-weight: 700;">VI</span>
+                        <h4 style="font-size: 14px; color: var(--accent-purple); letter-spacing: 1px;">通信与远程控制</h4>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="padding: 10px 14px; background: rgba(136, 0, 255, 0.03); border-radius: 8px; border-left: 2px solid rgba(136, 0, 255, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第15章 · Bridge系统</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">三代架构演进：HTTP → WebSocket → Direct Connection</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(136, 0, 255, 0.03); border-radius: 8px; border-left: 2px solid rgba(136, 0, 255, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第16章 · 远程与直连</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">RemoteSessionManager与多模式连接</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part 7 -->
+                <div class="tech-card fade-in" style="border-color: rgba(0, 255, 242, 0.2);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(0, 255, 242, 0.15); border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--accent-cyan); font-weight: 700;">VII</span>
+                        <h4 style="font-size: 14px; color: var(--accent-cyan); letter-spacing: 1px;">UI与前端工程</h4>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="padding: 10px 14px; background: rgba(0, 255, 242, 0.03); border-radius: 8px; border-left: 2px solid rgba(0, 255, 242, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第17章 · 自定义Ink框架</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">双缓冲区blit渲染与纯TS重写的Yoga布局引擎</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(0, 255, 242, 0.03); border-radius: 8px; border-left: 2px solid rgba(0, 255, 242, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第18章 · 组件库与状态管理</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">146个组件文件的功能域划分</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part 8 -->
+                <div class="tech-card fade-in" style="border-color: rgba(0, 255, 136, 0.2);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(0, 255, 136, 0.15); border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--accent-green); font-weight: 700;">VIII</span>
+                        <h4 style="font-size: 14px; color: var(--accent-green); letter-spacing: 1px;">插件生态与扩展系统</h4>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="padding: 10px 14px; background: rgba(0, 255, 136, 0.03); border-radius: 8px; border-left: 2px solid rgba(0, 255, 136, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第19章 · 插件系统</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">name@marketplace命名空间与多市场设计</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(0, 255, 136, 0.03); border-radius: 8px; border-left: 2px solid rgba(0, 255, 136, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第20章 · 技能系统：从入门到精通</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">Markdown封装的可复用工作流扩展能力</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(0, 255, 136, 0.03); border-radius: 8px; border-left: 2px solid rgba(0, 255, 136, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第21章 · MCP集成</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">7种传输协议的Model Context Protocol支持</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part 9 -->
+                <div class="tech-card fade-in" style="border-color: rgba(255, 0, 68, 0.2);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(255, 0, 68, 0.15); border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--accent-red); font-weight: 700;">IX</span>
+                        <h4 style="font-size: 14px; color: var(--accent-red); letter-spacing: 1px;">安全与企业特性</h4>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="padding: 10px 14px; background: rgba(255, 0, 68, 0.03); border-radius: 8px; border-left: 2px solid rgba(255, 0, 68, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第22章 · 七层安全防护体系</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">纵深防御的安全架构设计</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(255, 0, 68, 0.03); border-radius: 8px; border-left: 2px solid rgba(255, 0, 68, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第23章 · 企业功能</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">组织级PolicyLimits与OAuth认证</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(255, 0, 68, 0.03); border-radius: 8px; border-left: 2px solid rgba(255, 0, 68, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第23A章 · Harness Engineering</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">系统提示词装配工程全解</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(255, 0, 68, 0.03); border-radius: 8px; border-left: 2px solid rgba(255, 0, 68, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第23B章 · 封号机制深度解析</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">从限流到封禁的六级递进链路</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part 10 -->
+                <div class="tech-card fade-in" style="border-color: rgba(255, 136, 0, 0.2);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(255, 136, 0, 0.15); border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--accent-orange); font-weight: 700;">X</span>
+                        <h4 style="font-size: 14px; color: var(--accent-orange); letter-spacing: 1px;">隐藏特性与彩蛋</h4>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="padding: 10px 14px; background: rgba(255, 136, 0, 0.05); border-radius: 8px; border-left: 2px solid rgba(255, 136, 0, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第24章 · 隐藏命令完整清单</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">103个命令目录完整收录</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(255, 136, 0, 0.05); border-radius: 8px; border-left: 2px solid rgba(255, 136, 0, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第25章 · Buddy虚拟宠物系统</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">18种物种5级稀有度的确定性宠物生成</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(255, 136, 0, 0.05); border-radius: 8px; border-left: 2px solid rgba(255, 136, 0, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第26章 · Computer Use与浏览器集成</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">鼠标键盘截屏的MCP工具封装</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part 11 -->
+                <div class="tech-card fade-in" style="border-color: rgba(255, 0, 255, 0.2);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(255, 0, 255, 0.15); border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--accent-magenta); font-weight: 700;">XI</span>
+                        <h4 style="font-size: 14px; color: var(--accent-magenta); letter-spacing: 1px;">工程实践与设计哲学</h4>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="padding: 10px 14px; background: rgba(255, 0, 255, 0.03); border-radius: 8px; border-left: 2px solid rgba(255, 0, 255, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第27章 · 关键设计模式</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">编译时特性标志与Bun打包器Dead Code消除</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(255, 0, 255, 0.03); border-radius: 8px; border-left: 2px solid rgba(255, 0, 255, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第28章 · 性能工程</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">三阶段初始化与帧缓存渲染优化</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part 12 -->
+                <div class="tech-card fade-in" style="border-color: rgba(255, 255, 0, 0.2);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(255, 255, 0, 0.15); border-radius: 8px; font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--accent-yellow); font-weight: 700;">XII</span>
+                        <h4 style="font-size: 14px; color: var(--accent-yellow); letter-spacing: 1px;">战略推演</h4>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="padding: 10px 14px; background: rgba(255, 255, 0, 0.03); border-radius: 8px; border-left: 2px solid rgba(255, 255, 0, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第29章 · Anthropic的产品路线图推演</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">特性标志与隐藏功能揭示的近期方向</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(255, 255, 0, 0.03); border-radius: 8px; border-left: 2px solid rgba(255, 255, 0, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第30章 · 竞争格局影响</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">终端AI编码Agent赛道全景分析</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(255, 255, 0, 0.03); border-radius: 8px; border-left: 2px solid rgba(255, 255, 0, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第30A章 · Claude Code vs Codex CLI</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">12维度全面技术对比</div>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(255, 255, 0, 0.03); border-radius: 8px; border-left: 2px solid rgba(255, 255, 0, 0.3);">
+                            <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">第30B章 · Claude Code vs OpenClaw</div>
+                            <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">闭源旗舰与开源生态深度对比</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appendices -->
+            <div class="fade-in" style="margin-top: 40px;">
+                <div style="background: var(--bg-card); border: 1px solid rgba(255, 136, 0, 0.15); border-radius: 16px; padding: 32px; backdrop-filter: blur(10px);">
+                    <h4 style="font-family: 'Orbitron', sans-serif; font-size: 16px; color: var(--accent-orange); margin-bottom: 20px; letter-spacing: 2px;">APPENDICES</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+                        <div style="padding: 10px 14px; background: rgba(255, 136, 0, 0.05); border-radius: 8px; border-left: 2px solid rgba(255, 136, 0, 0.2);">
+                            <span style="font-size: 12px; color: var(--text-primary);">附录A · 54个工具完整清单</span>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(255, 136, 0, 0.05); border-radius: 8px; border-left: 2px solid rgba(255, 136, 0, 0.2);">
+                            <span style="font-size: 12px; color: var(--text-primary);">附录B · 89个特性标志完整清单</span>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(255, 136, 0, 0.05); border-radius: 8px; border-left: 2px solid rgba(255, 136, 0, 0.2);">
+                            <span style="font-size: 12px; color: var(--text-primary);">附录C · 117个命令目录完整清单</span>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(255, 136, 0, 0.05); border-radius: 8px; border-left: 2px solid rgba(255, 136, 0, 0.2);">
+                            <span style="font-size: 12px; color: var(--text-primary);">附录D · 关键源文件索引（Top 30）</span>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(255, 136, 0, 0.05); border-radius: 8px; border-left: 2px solid rgba(255, 136, 0, 0.2);">
+                            <span style="font-size: 12px; color: var(--text-primary);">附录E · 数据流架构图</span>
+                        </div>
+                        <div style="padding: 10px 14px; background: rgba(255, 136, 0, 0.05); border-radius: 8px; border-left: 2px solid rgba(255, 136, 0, 0.2);">
+                            <span style="font-size: 12px; color: var(--text-primary);">附录F · 术语表</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Credits -->
+            <div class="fade-in" style="margin-top: 30px; text-align: center;">
+                <p style="font-size: 12px; color: var(--text-muted);">公众号：手工川 · v0.019 · 2026.04.01</p>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer class="footer">
         <p class="footer-text">
