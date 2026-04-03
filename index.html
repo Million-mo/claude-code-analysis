@@ -1036,11 +1036,39 @@
         <div class="container">
             <div class="section-header fade-in">
                 <span class="section-tag">Architecture</span>
-                <h2 class="section-title">Design Patterns</h2>
+                <h2 class="section-title">System Architecture</h2>
                 <p class="section-desc">Core architectural patterns that enable Claude Code's powerful capabilities</p>
             </div>
 
-            <div class="arch-grid">
+            <div class="arch-diagram fade-in" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 40px; margin-bottom: 40px; text-align: center;">
+                <div class="arch-layer" style="display: flex; justify-content: center; flex-wrap: wrap; gap: 16px; margin: 20px 0;">
+                    <div class="arch-box" style="padding: 16px 24px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; min-width: 140px; color: var(--accent-cyan);">User Input</div>
+                </div>
+                <div style="color: var(--text-muted); font-size: 20px; margin: 8px 0;">↓</div>
+                <div class="arch-layer" style="display: flex; justify-content: center; flex-wrap: wrap; gap: 16px; margin: 20px 0;">
+                    <div class="arch-box" style="padding: 16px 24px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; min-width: 140px; color: var(--accent-magenta);">REPL / Ink UI</div>
+                </div>
+                <div style="color: var(--text-muted); font-size: 20px; margin: 8px 0;">↓</div>
+                <div class="arch-layer" style="display: flex; justify-content: center; flex-wrap: wrap; gap: 16px; margin: 20px 0;">
+                    <div class="arch-box" style="padding: 16px 24px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; min-width: 140px; color: var(--accent-green);">QueryEngine</div>
+                    <div class="arch-box" style="padding: 16px 24px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; min-width: 140px; color: var(--accent-green);">query() Loop</div>
+                    <div class="arch-box" style="padding: 16px 24px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; min-width: 140px; color: var(--accent-green);">callModel()</div>
+                </div>
+                <div style="color: var(--text-muted); font-size: 20px; margin: 8px 0;">↓</div>
+                <div class="arch-layer" style="display: flex; justify-content: center; flex-wrap: wrap; gap: 16px; margin: 20px 0;">
+                    <div class="arch-box" style="padding: 16px 24px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; min-width: 140px; color: var(--accent-orange);">Tool System</div>
+                    <div class="arch-box" style="padding: 16px 24px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; min-width: 140px; color: var(--accent-orange);">Command System</div>
+                    <div class="arch-box" style="padding: 16px 24px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; min-width: 140px; color: var(--accent-orange);">Context Manager</div>
+                </div>
+                <div style="color: var(--text-muted); font-size: 20px; margin: 8px 0;">↓</div>
+                <div class="arch-layer" style="display: flex; justify-content: center; flex-wrap: wrap; gap: 16px; margin: 20px 0;">
+                    <div class="arch-box" style="padding: 16px 24px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; min-width: 140px; color: var(--accent-purple);">Anthropic API</div>
+                    <div class="arch-box" style="padding: 16px 24px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; min-width: 140px; color: var(--accent-purple);">MCP Servers</div>
+                    <div class="arch-box" style="padding: 16px 24px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; min-width: 140px; color: var(--accent-purple);">IDE Bridge</div>
+                </div>
+            </div>
+
+            <div class="grid-2" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 24px;">
                 <div class="arch-card fade-in">
                     <span class="arch-number">01</span>
                     <div class="arch-title">
@@ -1051,12 +1079,12 @@
                         Tool System
                     </div>
                     <div class="arch-desc">
-                        Every tool is a self-contained module with Zod input schemas, permission models, execution logic, and progress state types. Enables secure, sandboxed operations with full type safety.
+                        Every tool is a self-contained module with Zod input schemas, permission models, execution logic, and progress state types. Enables secure, sandboxed operations with full type safety. 45+ core tools including AgentTool, BashTool, FileReadTool, FileEditTool, GrepTool, WebFetchTool.
                     </div>
                     <div class="arch-tags">
                         <span class="arch-tag">Zod Schema</span>
-                        <span class="arch-tag">Permission Model</span>
-                        <span class="arch-tag">Progress State</span>
+                        <span class="arch-tag">45+ Tools</span>
+                        <span class="arch-tag">Concurrency Control</span>
                     </div>
                 </div>
 
@@ -1199,6 +1227,69 @@
         </div>
     </section>
 
+    <!-- Query Engine Deep Dive -->
+    <section class="section" id="query-engine" style="background: var(--bg-secondary);">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-tag">Query Engine</span>
+                <h2 class="section-title">Streaming-First Processing</h2>
+                <p class="section-desc">The query engine uses async generator pattern for real-time tool execution</p>
+            </div>
+
+            <div class="grid-2" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 24px;">
+                <div class="arch-card fade-in">
+                    <div class="arch-title">Query Loop Architecture</div>
+                    <div class="arch-desc">
+                        The <code style="color: var(--accent-green);">query()</code> function is an async generator that yields messages, stream events, and tombstones as processing happens. Tools can execute as they stream in from the model, maximizing parallelism.
+                    </div>
+                    <pre style="background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 12px; margin-top: 16px;"><code style="color: var(--accent-green);"><span style="color: var(--accent-magenta);">async</span> <span style="color: var(--accent-cyan);">query</span>(messages, context) {
+  <span style="color: var(--accent-magenta);">yield*</span> <span style="color: var(--accent-cyan);">compact</span>(messages)
+  <span style="color: var(--accent-magenta);">yield</span> <span style="color: var(--accent-magenta);">await</span> <span style="color: var(--accent-cyan);">callModel</span>(messages)
+  <span style="color: var(--accent-magenta);">yield*</span> <span style="color: var(--accent-cyan);">runTools</span>(streamingTools)
+}</code></pre>
+                </div>
+
+                <div class="arch-card fade-in">
+                    <div class="arch-title">Context Management</div>
+                    <div class="arch-desc">
+                        Multiple compaction strategies maintain context within token limits:
+                    </div>
+                    <ul style="list-style: none; margin-top: 16px;">
+                        <li style="padding: 8px 0; color: var(--text-secondary); border-bottom: 1px solid rgba(255,255,255,0.05);"><strong style="color: var(--accent-cyan);">Snip</strong> — Remove intermediate turns, preserve boundaries</li>
+                        <li style="padding: 8px 0; color: var(--text-secondary); border-bottom: 1px solid rgba(255,255,255,0.05);"><strong style="color: var(--accent-cyan);">Microcompact</strong> — Cache tool results by tool_use_id</li>
+                        <li style="padding: 8px 0; color: var(--text-secondary); border-bottom: 1px solid rgba(255,255,255,0.05);"><strong style="color: var(--accent-cyan);">Autocompact</strong> — Summarize when approaching limit</li>
+                        <li style="padding: 8px 0; color: var(--text-secondary);"><strong style="color: var(--accent-cyan);">Context Collapse</strong> — Hierarchical summarization</li>
+                    </ul>
+                </div>
+
+                <div class="arch-card fade-in">
+                    <div class="arch-title">Dependency Injection</div>
+                    <div class="arch-desc">
+                        Query dependencies are injected for testability. Production deps are swapped for mocks in tests.
+                    </div>
+                    <pre style="background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 12px; margin-top: 16px;"><code style="color: var(--accent-green);"><span style="color: var(--accent-magenta);">export type</span> <span style="color: var(--accent-purple);">QueryDeps</span> = {
+  <span style="color: var(--accent-cyan);">callModel</span>: <span style="color: var(--accent-magenta);">typeof</span> queryModelWithStreaming
+  <span style="color: var(--accent-cyan);">microcompact</span>: <span style="color: var(--accent-magenta);">typeof</span> microcompactMessages
+  <span style="color: var(--accent-cyan);">autocompact</span>: <span style="color: var(--accent-magenta);">typeof</span> autoCompactIfNeeded
+}</code></pre>
+                </div>
+
+                <div class="arch-card fade-in">
+                    <div class="arch-title">API Error Recovery</div>
+                    <div class="arch-desc">
+                        Multi-layer error recovery with circuit breakers:
+                    </div>
+                    <ul style="list-style: none; margin-top: 16px;">
+                        <li style="padding: 8px 0; color: var(--text-secondary); border-bottom: 1px solid rgba(255,255,255,0.05);"><strong style="color: var(--accent-cyan);">Fallback Models</strong> — Retry with backup model</li>
+                        <li style="padding: 8px 0; color: var(--text-secondary); border-bottom: 1px solid rgba(255,255,255,0.05);"><strong style="color: var(--accent-cyan);">Streaming Fallback</strong> — Non-streaming retry</li>
+                        <li style="padding: 8px 0; color: var(--text-secondary); border-bottom: 1px solid rgba(255,255,255,0.05);"><strong style="color: var(--accent-cyan);">Token Budget</strong> — Track across compactions</li>
+                        <li style="padding: 8px 0; color: var(--text-secondary);"><strong style="color: var(--accent-cyan);">Circuit Breaker</strong> — Stop after 3 consecutive failures</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Feature Flags Matrix -->
     <section class="section" id="features">
         <div class="container">
@@ -1295,6 +1386,85 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Authentication & Providers -->
+    <section class="section" id="auth" style="background: var(--bg-secondary);">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-tag">Authentication</span>
+                <h2 class="section-title">Multi-Provider Support</h2>
+                <p class="section-desc">Claude Code supports multiple authentication methods and cloud providers</p>
+            </div>
+
+            <div class="tech-grid">
+                <div class="tech-card fade-in">
+                    <div class="tech-icon cyan">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                        </svg>
+                    </div>
+                    <div class="tech-name">API Key</div>
+                    <div class="tech-desc">Direct authentication with Anthropic API keys stored securely in macOS Keychain</div>
+                </div>
+
+                <div class="tech-card fade-in">
+                    <div class="tech-icon magenta">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                            <polyline points="15 3 21 3 21 9"/>
+                            <line x1="10" y1="14" x2="21" y2="3"/>
+                        </svg>
+                    </div>
+                    <div class="tech-name">OAuth 2.0</div>
+                    <div class="tech-desc">OAuth 2.0 flow for enterprise authentication with automatic token refresh</div>
+                </div>
+
+                <div class="tech-card fade-in">
+                    <div class="tech-icon green">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                        </svg>
+                    </div>
+                    <div class="tech-name">AWS Bedrock</div>
+                    <div class="tech-desc">Native integration with AWS Bedrock for Claude models via IAM role authentication</div>
+                </div>
+
+                <div class="tech-card fade-in">
+                    <div class="tech-icon yellow">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        </svg>
+                    </div>
+                    <div class="tech-name">Google Vertex</div>
+                    <div class="tech-desc">Google Cloud Vertex AI integration with OAuth 2.0 authentication</div>
+                </div>
+
+                <div class="tech-card fade-in">
+                    <div class="tech-icon orange">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </div>
+                    <div class="tech-name">Azure Foundry</div>
+                    <div class="tech-desc">Microsoft Azure AI Foundry integration with Azure AD token provider</div>
+                </div>
+            </div>
+
+            <div class="arch-card fade-in" style="margin-top: 40px;">
+                <div class="arch-title">Client Selection Logic</div>
+                <pre style="background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; overflow-x: auto; font-size: 13px; margin-top: 16px;"><code><span style="color: var(--accent-magenta);">if</span> (<span style="color: var(--accent-cyan);">isEnvTruthy</span>(<span style="color: var(--accent-green);">'CLAUDE_CODE_USE_BEDROCK'</span>)) {
+  <span style="color: var(--accent-magenta);">return new</span> <span style="color: var(--accent-purple);">AnthropicBedrock</span>({ awsRegion, ... })
+}
+<span style="color: var(--accent-magenta);">if</span> (<span style="color: var(--accent-cyan);">isEnvTruthy</span>(<span style="color: var(--accent-green);">'CLAUDE_CODE_USE_FOUNDRY'</span>)) {
+  <span style="color: var(--accent-magenta);">return new</span> <span style="color: var(--accent-purple);">AnthropicFoundry</span>({ azureADTokenProvider, ... })
+}
+<span style="color: var(--accent-magenta);">return new</span> <span style="color: var(--accent-purple);">Anthropic</span>({ apiKey, ... })</code></pre>
             </div>
         </div>
     </section>
